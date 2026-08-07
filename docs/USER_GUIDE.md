@@ -1,13 +1,13 @@
 # Ollama Colab — User Guide
 
-This guide walks through using the `Ollama_Colab_v2.6.ipynb` notebook end-to-end.
+This guide walks through using the `Ollama_Colab_v2.6_Successful-Run-Example.ipynb` notebook end-to-end.
 
 > Requirements: a Google account with Colab access; a GPU runtime (T4/L4/A100). The free tier gives a **T4 (16 GB VRAM)**.
 
 ---
 
 ## 1. Open and set up
-1. Open `Ollama_Colab_v2.6.ipynb` in [Google Colab](https://colab.research.google.com/).
+1. Open `Ollama_Colab_v2.6_Successful-Run-Example.ipynb` in [Google Colab](https://colab.research.google.com/).
 2. `Runtime → Change runtime type → T4 GPU → Save`.
 3. Run cells in order (Steps 1–10), or `Runtime → Run all`.
 
@@ -97,4 +97,4 @@ The model browser (Step 2) auto-filters to the detected GPU by default.
 - For anything beyond quick testing, put the tunnel behind a reverse proxy (nginx basic auth or Cloudflare Zero Trust).
 - Never forward sensitive/personal data through the public URL.
 
-See [README.md](README.md) and [FEATURES.md](FEATURES.md) for the feature matrix, and the `Ollama_Colab_v2.6_Sucessfull-Run-Example.ipynb` for a fully-executed run with sample output.
+See [README.md](README.md) and [FEATURES.md](FEATURES.md) for the feature matrix, and the `Ollama_Colab_v2.6_Successful-Run-Example.ipynb` for a fully-executed run with sample output.

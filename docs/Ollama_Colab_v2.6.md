@@ -1,6 +1,6 @@
 ﻿# Ollama Colab v2.6 — Notebook Source (converted from .ipynb)
 
-> Converted from `Ollama_Colab_v2.6.ipynb` for use as a NotebookLM source.
+> Converted from `Ollama_Colab_v2.6_Successful-Run-Example.ipynb` for use as a NotebookLM source.
 
 <!-- cell 0 [markdown] -->
 # Ollama Colab v2.6
@@ -789,10 +789,11 @@ import time
 
 # ── Step 7: Pull Model ─────────────────────────────────────────────────────────
 
-# Ensure MODEL_NAME is set. If not, default to a common model for demonstration.
 if 'MODEL_NAME' not in globals() or not MODEL_NAME:
-    print("MODEL_NAME was not set in Step 2. Defaulting to 'deepseek-r1:1.5b'.")
-    MODEL_NAME = 'deepseek-r1:1.5b'
+    raise RuntimeError(
+        'MODEL_NAME is not set.\n'
+        "Go back to Step 2, choose a model and tag, then click '✅ Use this model'."
+    )
 
 print(f'📥 Pulling {MODEL_NAME} ...')
 print('⏱️  This may take 5–15 minutes depending on model size and connection speed.\n')
@@ -911,7 +912,7 @@ if TUNNEL_METHOD in ['Cloudflare quick tunnel (no credentials)', 'Cloudflare nam
             subprocess.run(['sudo', 'mv', 'cloudflared-linux-amd64', '/usr/local/bin/cloudflared'], check=True) # Move to PATH
             print('✅ cloudflared installed.')
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(f'Failed to install cloudflared: {e.stderr.decode()}') from e
+            raise RuntimeError(f'Failed to install cloudflared: {str(e)}') from e
 
 # ── Cloudflare named tunnel ───────────────────────────────────────────────────
 if tunnel_type == 'cloudflare':

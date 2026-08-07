@@ -1,6 +1,6 @@
 # Ollama Colab — Features
 
-Source of truth: `Ollama_Colab_v2.6.ipynb`.
+Source of truth: `Ollama_Colab_v2.6_Successful-Run-Example.ipynb`.
 
 ## Core flow
 1. **Dependency & environment check (Step 1)** — detects Python, GPU, installs missing Python packages (`requests`, `beautifulsoup4`, `ipywidgets`, `tqdm`, `psutil`, `pyngrok`), and initialises shared globals: the background-process registry (`_bg_processes`), `GPU_INFO`, and `estimate_model_size_gb()`.
