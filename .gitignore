@@ -1,3 +1,5 @@
 /_DEV_
 /.kilo
-/.github
+__pycache__/
+*.pyc
+/.github/skills
