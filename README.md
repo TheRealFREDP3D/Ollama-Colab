@@ -1,4 +1,4 @@
-# Ollama Colab v2.5
+# Ollama Colab v2.6
 
 Run Ollama (a tool for running large language models locally) on Google Colab with a public HTTPS endpoint via Cloudflare Tunnel or ngrok.
 
@@ -29,13 +29,13 @@ Run Ollama (a tool for running large language models locally) on Google Colab wi
 
 | Step | What it does |
 |------|-------------|
-| **1 — Install Dependencies** | Checks Python/GPU, installs missing packages, initialises shared globals |
-| **2 — Model Browser** | Interactive widget to browse/filter/select Ollama models and tags |
+| **1 — Install Dependencies** | Checks Python/GPU, installs missing packages, initialises shared globals (including GPU detection used for sizing) |
+| **2 — Model Browser** | Interactive widget to browse/filter/select Ollama models and tags. By default only shows models/tags that fit the detected GPU's VRAM, smallest first — uncheck "Only show models that fit..." to browse the full library |
 | **3 — Configure Environment** | Memory management policy, tunnel type, loads Colab Secrets |
 | **4 — GPU Monitoring** | One-shot GPU snapshot; `monitor_gpu()` available for live stats |
 | **5 — Install Ollama** | Downloads and installs the Ollama binary via the official install script |
-| **6 — Pull Model** | Downloads the selected model with streamed progress output |
-| **7 — Start Ollama Server** | Launches `ollama serve` in the background, waits for the API to respond |
+| **6 — Start Ollama Server** | Launches `ollama serve` in the background, waits for the API to respond |
+| **7 — Pull Model** | Downloads the selected model with streamed progress output |
 | **8 — Start Tunnel** | Creates the public HTTPS endpoint (Cloudflare quick/named or ngrok) |
 | **9 — Test Endpoint** | Sends a configurable test prompt and prints the response |
 | **10 — Keep Server Alive** | Blocking loop; stops cell (■) to shut down cleanly |
@@ -162,24 +162,7 @@ for name, proc in _bg_processes.items():
 
 ## Changelog
 
-### v2.5
-- Fixed: duplicate model browser definitions removed
-- Fixed: missing `ollama serve` step added (Step 7)
-- Fixed: missing Ollama install step added (Step 5)
-- Fixed: security advisory was in a code cell (now markdown only)
-- Fixed: `_bg_processes` and globals now initialised in Step 1 to prevent `NameError` on out-of-order execution
-- Fixed: GPU monitor HTML table now built as a single string before `display()` call
-- Fixed: step numbers now match the Table of Contents (1–10, no gaps or duplicates)
-- Improved: memory config widget auto-applies on change and persists to `os.environ`
-- Improved: type hints and docstrings throughout
-- Improved: `check_model_memory_safety` uses a single dict lookup instead of nested if-chains
-
-### v2.4
-- Initial public release
-- Interactive model browser with Ollama library scraping and static fallback
-- Cloudflare quick tunnel, named tunnel, and ngrok support
-- GPU monitoring widget
-- Memory management policy widget
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
 ---
 
