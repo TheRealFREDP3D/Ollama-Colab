@@ -1,4 +1,7 @@
-.vscode/settings.json
-Ollama-Colab-Ngrok-v2.py
 /_DEV_
-/.codeboarding
+/.kilo
+__pycache__/
+*.pyc
+/.github/skills
+.kanban/
+/.opencode
