@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-08-08
+
+### Added
+- `cloudflare_hostname` secret support for Cloudflare named tunnels — allows users to specify their tunnel's public URL in Colab Secrets instead of manually setting `public_url` in Step 8
+- Documentation for `cloudflare_hostname` secret in Step 3 tunnel credentials table
+
+### Fixed
+- Variable scope issue: `cloudflare_hostname` now initialized before tunnel type check in Step 3 to prevent `NameError` in Step 8 when using non-Cloudflare tunnel types
+
 ## [2.6] - 2026-08-05
 
 ### Added
@@ -56,7 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ngrok tunnel integration
 - GPU monitoring capabilities
 
-[Unreleased]: https://github.com/TheRealFREDP3D/Ollama-Colab/compare/v2.6...HEAD
+[Unreleased]: https://github.com/TheRealFREDP3D/Ollama-Colab/compare/v2.6.1...HEAD
+[2.6.1]: https://github.com/TheRealFREDP3D/Ollama-Colab/compare/v2.6...v2.6.1
 [2.6]: https://github.com/TheRealFREDP3D/Ollama-Colab/compare/v2.5...v2.6
 [2.5]: https://github.com/TheRealFREDP3D/Ollama-Colab/compare/v2.4...v2.5
 [2.4]: https://github.com/TheRealFREDP3D/Ollama-Colab/compare/v1.0...v2.4
