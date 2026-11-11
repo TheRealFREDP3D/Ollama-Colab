@@ -29,6 +29,7 @@ Source of truth: `Ollama_Colab_v2.6.ipynb`.
 - **Pull retry with server restart** — Step 7 detects a dead `ollama serve`, restarts it, and re-pulls; the restarted process is tracked in `_bg_processes`.
 - **Graceful scraping fallback** — the model browser falls back to a curated static list + cached default tags when `ollama.com` is unreachable.
 - **Process registry** — all long-running procs (`ollama`, tunnel) live in `_bg_processes`, so both the keep-alive cell and the emergency-shutdown snippet can tear them down uniformly.
+- **cloudflared install fallback** — Step 8 installs cloudflared from Cloudflare's GPG-signed package repository when reachable, otherwise from the official GitHub release binary (downloaded into `/tmp`); a failed install always raises a readable error rather than a raw `CalledProcessError`.
 - **GPU-aware sizing** — single source of truth (`estimate_model_size_gb` + `GPU_INFO`) reused by the browser filter and the memory-safety check, so the two never disagree.
 
 ## API compatibility

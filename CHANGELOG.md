@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - `refresh_list()` delegates its filtering to the shared `visible_models()` helper instead of repeating the same predicate
 
+### Fixed
+- Step 8 cloudflared install aborted the cell for everyone: it fetched `cloudflared-linux-amd64.sha256`, which Cloudflare does not publish as a release asset, so `wget` exited 8 and the cell raised `RuntimeError`. cloudflared is now installed from Cloudflare's GPG-signed package repository when available, falling back to the official GitHub release binary (fetched into `/tmp`) with an explicit "not signature-verified" message. The binary is downloaded to `/tmp` instead of the working directory, so re-running the cell cannot collide with a stale copy, and a failed install now always raises a readable `RuntimeError` instead of a raw `CalledProcessError`
+
 ## [2.6.1] - 2026-08-08
 
 ### Added
