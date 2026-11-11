@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ollama on Colab — Free Cloud LLMs | TheRealFRED</title>
+<style>
+  :root {
+    --primary-color: #0a0a0a;
+    --secondary-color: #1a1a1a;
+    --accent-color: #2a2a2a;
+    --highlight-color: #00d4aa;
+    --highlight-secondary: #00ffcc;
+    --text-color: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --gradient-primary: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    --gradient-accent: linear-gradient(135deg, #00d4aa 0%, #00ffcc 100%);
+    --shadow-primary: 0 0 20px rgba(0, 212, 170, 0.3);
+    --shadow-secondary: 0 5px 15px rgba(0, 0, 0, 0.5);
+    --glow-color: rgba(0, 212, 170, 0.4);
+    --border-color: rgba(0, 212, 170, 0.2);
+    --code-bg: #0f0f0f;
+    --danger-color: #ef4444;
+    --danger-glow: rgba(239, 68, 68, 0.3);
+    --warning-color: #f59e0b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'JetBrains Mono','Fira Code','Cascadia Code','SF Mono','Consolas','Monaco','Menlo','DejaVu Sans Mono',monospace;background:var(--primary-color);color:var(--text-color);line-height:1.6;overflow-x:hidden;font-size:14px}
+
+  /* SVG icon helper */
+  .icon{display:inline-block;width:1em;height:1em;vertical-align:-0.125em;fill:currentColor;flex-shrink:0}
+  .icon-sm{width:0.85em;height:0.85em}
+  .icon-lg{width:1.3em;height:1.3em}
+  .icon-xl{width:2em;height:2em}
+  .icon-2x{width:2.5em;height:2.5em}
+  .icon-3x{width:3em;height:3em}
+
+  /* Matrix rain */
+  .matrix-rain{position:fixed;top:0;left:0;width:100%;height:100%;background:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="50" font-size="8" fill="%2300d4aa" opacity="0.1">01010101</text></svg>') repeat;animation:matrix-fall 25s linear infinite;z-index:0;opacity:0.4;pointer-events:none}
+  @keyframes matrix-fall{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
+  .content-wrapper{position:relative;z-index:2}
+
+  ::-webkit-scrollbar{width:6px}
+  ::-webkit-scrollbar-track{background:var(--primary-color)}
+  ::-webkit-scrollbar-thumb{background:var(--accent-color);border-radius:3px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--highlight-color)}
+  .gradient-text{background:var(--gradient-accent);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+  /* Layout helpers (replaces tailwind) */
+  .container{max-width:1200px;margin:0 auto;padding:0 20px}
+  .container-sm{max-width:800px;margin:0 auto;padding:0 20px}
+  .container-md{max-width:1000px;margin:0 auto;padding:0 20px}
+  .text-center{text-align:center}
+  .flex{display:flex}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}
+  .items-center{align-items:center}.justify-center{justify-content:center}
+  .justify-between{justify-content:space-between}
+  .gap-1{gap:0.25rem}.gap-2{gap:0.5rem}.gap-3{gap:0.75rem}.gap-4{gap:1rem}.gap-6{gap:1.5rem}.gap-8{gap:2rem}
+  .flex-1{flex:1}.shrink-0{flex-shrink:0}
+  .grid{display:grid}
+  .grid-2{grid-template-columns:repeat(2,1fr)}
+  .grid-3{grid-template-columns:repeat(3,1fr)}
+  .grid-auto{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+  .grid-features{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .grid-stats{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .mt-1{margin-top:0.25rem}.mt-2{margin-top:0.5rem}.mt-3{margin-top:0.75rem}.mt-4{margin-top:1rem}.mt-6{margin-top:1.5rem}.mt-8{margin-top:2rem}
+  .mb-1{margin-bottom:0.25rem}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.mb-4{margin-bottom:1rem}.mb-6{margin-bottom:1.5rem}.mb-8{margin-bottom:2rem}
+  .mx-auto{margin-left:auto;margin-right:auto}
+  .px-6{padding-left:1.5rem;padding-right:1.5rem}
+  .py-16{padding-top:4rem;padding-bottom:4rem}
+  .hidden{display:none!important}
+  .w-full{width:100%}
+  .relative{position:relative}.absolute{position:absolute}
+  .z-10{z-index:10}.z-0{z-index:0}
+  .overflow-hidden{overflow:hidden}
+  .truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pointer{cursor:pointer}
+  .no-select{user-select:none}
+  .inline-flex{display:inline-flex}
+
+  /* Nav */
+  .navbar{position:fixed;top:0;width:100%;background:rgba(10,10,10,0.95);backdrop-filter:blur(10px);z-index:1000;transition:all .3s ease;border-bottom:1px solid var(--border-color)}
+  .navbar.scrolled{box-shadow:var(--shadow-secondary)}
+  .nav-container{max-width:1200px;margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;align-items:center;height:70px}
+  .nav-logo .logo-text{font-family:inherit;font-size:1.2rem;font-weight:600;color:var(--highlight-color);text-decoration:none;text-shadow:0 0 10px var(--glow-color)}
+  .nav-menu{display:flex;list-style:none;gap:2rem}
+  .nav-link{color:var(--text-color);text-decoration:none;font-weight:500;font-size:.9rem;transition:all .3s ease;position:relative;padding:.5rem 0;font-family:inherit}
+  .nav-link:hover{color:var(--highlight-color);text-shadow:0 0 8px var(--glow-color)}
+  .nav-link::after{content:'';position:absolute;bottom:0;left:0;width:0;height:2px;background:var(--gradient-accent);transition:width .3s ease;box-shadow:0 0 5px var(--glow-color)}
+  .nav-link:hover::after{width:100%}
+  .hamburger{display:none;flex-direction:column;cursor:pointer}
+  .bar{width:25px;height:3px;background:var(--text-color);margin:3px 0;transition:.3s}
+
+  /* Hero */
+  .hero{min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden}
+  .hero-background{position:absolute;top:0;left:0;width:100%;height:100%;background:var(--gradient-primary);z-index:-2}
+  .typing-cursor::after{content:'|';animation:blink 1s infinite;color:var(--highlight-color)}
+  @keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+
+  /* Buttons */
+  .btn{padding:12px 30px;border:2px solid var(--highlight-color);border-radius:6px;font-weight:600;text-decoration:none;transition:all .3s ease;cursor:pointer;display:inline-block;font-family:inherit;font-size:.9rem;position:relative;overflow:hidden;background:transparent;color:var(--highlight-color);box-shadow:0 0 10px var(--glow-color)}
+  .btn:hover{background:var(--highlight-color);color:var(--primary-color);transform:translateY(-2px);box-shadow:var(--shadow-primary)}
+  .btn-secondary{border-color:var(--text-secondary);color:var(--text-color);box-shadow:none}
+  .btn-secondary:hover{background:var(--text-secondary);color:var(--primary-color);border-color:var(--text-color);box-shadow:none}
+  .btn-sm{padding:6px 14px;font-size:.75rem;border-width:1px}
+  .btn-danger{border-color:var(--danger-color);color:var(--danger-color);box-shadow:none}
+  .btn-danger:hover{background:var(--danger-color);color:#fff;box-shadow:0 0 10px var(--danger-glow)}
+  .btn:disabled{opacity:.3;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+
+  /* Section titles */
+  .section-title{font-size:2.5rem;text-align:center;margin-bottom:3rem;background:var(--gradient-accent);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+  /* Cards */
+  .card{background:rgba(42,42,42,.5);border-radius:12px;border:1px solid var(--border-color);transition:all .3s ease}
+  .card:hover{background:rgba(42,42,42,.8);box-shadow:0 0 20px var(--glow-color);transform:translateY(-5px)}
+  .feature-card{background:rgba(42,42,42,.5);border-radius:12px;padding:2rem;border:1px solid var(--border-color);transition:all .3s ease;text-align:center}
+  .feature-card:hover{transform:translateY(-5px);box-shadow:0 0 20px var(--glow-color);background:rgba(42,42,42,.8)}
+  .feature-icon{font-size:2rem;color:var(--highlight-color);margin-bottom:1rem}
+
+  /* Code blocks */
+  .code-block{background:var(--code-bg);border:1px solid var(--border-color);border-radius:8px;overflow:hidden}
+  .code-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(42,42,42,.3);border-bottom:1px solid var(--border-color)}
+  .code-dots{display:flex;gap:6px}
+  .code-dots span{width:10px;height:10px;border-radius:50%}
+  .code-dots span:nth-child(1){background:#ef4444}
+  .code-dots span:nth-child(2){background:#f59e0b}
+  .code-dots span:nth-child(3){background:#22c55e}
+  .code-content{padding:16px 20px;overflow-x:auto;font-size:13px;line-height:1.7;color:#d0d0d0;white-space:pre;tab-size:2;font-family:inherit}
+  .code-content .comment{color:#606060}.code-content .keyword{color:var(--highlight-color)}.code-content .string{color:#00ffcc}.code-content .cmd{color:#88ccff}.code-content .flag{color:#cc99ff}
+
+  .copy-btn{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(0,212,170,.1);border:1px solid var(--border-color);border-radius:6px;color:var(--highlight-color);font-size:12px;font-family:inherit;cursor:pointer;transition:all .2s}
+  .copy-btn:hover{background:rgba(0,212,170,.2);border-color:var(--highlight-color);box-shadow:0 0 8px var(--glow-color)}
+  .copy-btn.copied{background:rgba(0,212,170,.2);border-color:var(--highlight-color);color:var(--highlight-secondary)}
+
+  /* Chat */
+  .chat-container{background:rgba(10,10,10,.95);border:1px solid var(--border-color);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;height:540px;box-shadow:0 0 30px rgba(0,212,170,.05)}
+  .chat-header{padding:14px 20px;background:rgba(42,42,42,.3);border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between}
+  .chat-messages{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+  .chat-messages::-webkit-scrollbar{width:4px}
+  .chat-messages::-webkit-scrollbar-thumb{background:var(--accent-color);border-radius:2px}
+  .msg{max-width:85%;padding:10px 16px;border-radius:8px;font-size:13px;line-height:1.6;animation:msg-in .3s ease-out;word-wrap:break-word;white-space:pre-wrap;font-family:inherit}
+  @keyframes msg-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .msg-user{align-self:flex-end;background:rgba(0,212,170,.15);border:1px solid var(--border-color);border-bottom-right-radius:2px}
+  .msg-assistant{align-self:flex-start;background:var(--accent-color);border:1px solid var(--border-color);border-bottom-left-radius:2px}
+  .msg-system{align-self:center;background:transparent;border:none;color:var(--text-secondary);font-size:11px;text-align:center;padding:4px 12px}
+  .chat-input-area{padding:14px 16px;border-top:1px solid var(--border-color);display:flex;gap:10px;align-items:flex-end}
+  .chat-input{flex:1;background:var(--accent-color);border:1px solid var(--border-color);border-radius:6px;padding:10px 16px;color:var(--text-color);font-family:inherit;font-size:13px;resize:none;outline:none;max-height:100px;transition:border-color .2s}
+  .chat-input:focus{border-color:var(--highlight-color);box-shadow:0 0 10px var(--glow-color)}
+  .chat-input::placeholder{color:#555}
+  .send-btn{width:42px;height:42px;border-radius:6px;background:var(--highlight-color);border:2px solid var(--highlight-color);color:var(--primary-color);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;flex-shrink:0}
+  .send-btn:hover{box-shadow:var(--shadow-primary);transform:translateY(-2px)}
+  .send-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+
+  /* Steps */
+  .step-card{background:rgba(42,42,42,.5);border-radius:12px;border:1px solid var(--border-color);overflow:hidden;transition:all .3s ease}
+  .step-card:hover{background:rgba(42,42,42,.8);box-shadow:0 0 15px var(--glow-color)}
+  .step-header{padding:20px 24px;display:flex;align-items:center;gap:16px;cursor:pointer;user-select:none}
+  .step-number{width:40px;height:40px;border-radius:8px;background:rgba(0,212,170,.15);border:1px solid var(--border-color);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:var(--highlight-color);flex-shrink:0}
+  .step-chevron{margin-left:auto;color:var(--text-secondary);transition:transform .3s}
+  .step-card.open .step-chevron{transform:rotate(180deg)}
+  .step-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
+  .step-card.open .step-body{max-height:2000px}
+  .step-body-inner{padding:0 24px 24px 80px}
+
+  /* Architecture */
+  .arch-node{background:rgba(42,42,42,.5);border:1px solid var(--border-color);border-radius:12px;padding:20px;text-align:center;transition:all .3s ease}
+  .arch-node:hover,.arch-node.active-node{background:rgba(42,42,42,.8);box-shadow:0 0 20px var(--glow-color);transform:translateY(-5px)}
+  .arch-arrow{color:var(--highlight-color);font-size:24px;display:flex;align-items:center;justify-content:center;opacity:.4;animation:pulse-arrow 2s ease-in-out infinite}
+  @keyframes pulse-arrow{0%,100%{opacity:.2;text-shadow:none}50%{opacity:.8;text-shadow:0 0 10px var(--glow-color)}}
+
+  /* Status */
+  .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+  .status-dot.online{background:var(--highlight-color);box-shadow:0 0 8px var(--glow-color);animation:pulse-status 2s ease-in-out infinite}
+  .status-dot.offline{background:var(--danger-color);box-shadow:0 0 8px var(--danger-glow)}
+  .status-dot.checking{background:var(--highlight-color);animation:pulse-status .8s ease-in-out infinite}
+  @keyframes pulse-status{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* Model chips (chat) */
+  .model-chip{background:rgba(0,212,170,.15);color:var(--highlight-color);padding:6px 14px;border-radius:6px;font-size:.8rem;font-weight:500;font-family:inherit;border:1px solid var(--border-color);transition:all .3s ease;cursor:pointer}
+  .model-chip:hover{background:rgba(0,212,170,.25);box-shadow:0 0 8px var(--glow-color)}
+  .model-chip.selected{background:rgba(0,212,170,.3);border-color:var(--highlight-color);box-shadow:0 0 12px var(--glow-color)}
+
+  /* Toast */
+  .toast-container{position:fixed;top:80px;right:20px;z-index:1000;display:flex;flex-direction:column;gap:10px}
+  .toast{padding:12px 20px;border-radius:8px;background:var(--accent-color);border:1px solid var(--border-color);color:var(--text-color);font-size:12px;font-family:inherit;animation:toast-in .3s ease-out,toast-out .3s ease-in 2.7s forwards;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-secondary)}
+  @keyframes toast-in{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+  @keyframes toast-out{from{opacity:1}to{opacity:0;transform:translateY(-10px)}}
+
+  /* Fade in */
+  .fade-in{opacity:0;transform:translateY(30px);transition:all .6s ease}
+  .fade-in.visible{opacity:1;transform:translateY(0)}
+
+  /* Tabs */
+  .tab-btn{padding:10px 20px;border:1px solid var(--border-color);border-bottom:none;border-radius:8px 8px 0 0;background:transparent;color:var(--text-secondary);font-family:inherit;font-size:.8rem;cursor:pointer;transition:all .2s}
+  .tab-btn.active{background:var(--code-bg);color:var(--highlight-color);border-color:var(--highlight-color);text-shadow:0 0 8px var(--glow-color)}
+  .tab-btn:hover:not(.active){color:var(--text-color)}
+
+  /* Scroll arrow */
+  .scroll-indicator{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:2}
+  .scroll-arrow{width:30px;height:30px;border:2px solid var(--highlight-color);border-top:none;border-left:none;transform:rotate(45deg);animation:bounce 2s infinite}
+  @keyframes bounce{0%,20%,50%,80%,100%{transform:translateY(0) rotate(45deg)}40%{transform:translateY(-10px) rotate(45deg)}60%{transform:translateY(-5px) rotate(45deg)}}
+
+  /* Info box */
+  .info-box{font-size:.9rem;color:var(--highlight-color);padding:1.5rem;border-left:3px solid var(--highlight-color);background:rgba(0,212,170,.05);border-radius:0 8px 8px 0;box-shadow:0 0 10px var(--glow-color)}
+
+  /* Footer */
+  .footer{background:var(--primary-color);padding:2rem 0;text-align:center;border-top:1px solid var(--border-color)}
+  .footer-content p{color:var(--text-secondary);margin:.5rem 0}
+
+  /* ===== MODEL BROWSER ===== */
+  .mbar{width:100%;height:6px;background:rgba(42,42,42,.8);border-radius:3px;overflow:hidden;border:1px solid var(--border-color)}
+  .mbar-fill{height:100%;border-radius:3px;transition:width .6s ease;background:var(--gradient-accent);box-shadow:0 0 6px var(--glow-color)}
+  .mbar-fill.danger{background:linear-gradient(90deg,#ef4444,#f87171);box-shadow:0 0 6px var(--danger-glow)}
+  .mbar-fill.warning{background:linear-gradient(90deg,#f59e0b,#fbbf24);box-shadow:0 0 6px rgba(245,158,11,.3)}
+  .model-card{background:rgba(42,42,42,.5);border-radius:10px;border:1px solid var(--border-color);padding:16px;transition:all .3s ease;position:relative;overflow:hidden}
+  .model-card:hover{background:rgba(42,42,42,.8);box-shadow:0 0 15px var(--glow-color);transform:translateY(-3px)}
+  .model-card.is-pulled{border-color:var(--highlight-color);box-shadow:0 0 15px rgba(0,212,170,.1)}
+  .model-card.is-pulled::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gradient-accent)}
+  .model-card.too-large{opacity:.5}
+  .model-card.too-large:hover{opacity:.75}
+  .model-card.pulling{border-color:var(--warning-color)}
+  .model-pull-progress{position:absolute;bottom:0;left:0;height:3px;background:var(--gradient-accent);transition:width .3s;box-shadow:0 0 8px var(--glow-color)}
+  .filter-chip{padding:5px 12px;border-radius:6px;font-size:.75rem;font-family:inherit;cursor:pointer;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);transition:all .2s}
+  .filter-chip:hover{border-color:var(--text-secondary);color:var(--text-color)}
+  .filter-chip.active{border-color:var(--highlight-color);color:var(--highlight-color);background:rgba(0,212,170,.1);box-shadow:0 0 8px var(--glow-color)}
+  .stat-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:6px;font-size:.75rem;background:rgba(42,42,42,.5);border:1px solid var(--border-color)}
+  .gpu-select{padding:8px 14px 8px 12px;border-radius:6px;font-size:.8rem;font-family:inherit;background:var(--accent-color);border:1px solid var(--border-color);color:var(--text-color);outline:none;cursor:pointer;transition:all .2s;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%2300d4aa' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+  .gpu-select:focus{border-color:var(--highlight-color);box-shadow:0 0 10px var(--glow-color)}
+  .gpu-select option{background:var(--secondary-color);color:var(--text-color)}
+  .search-input{padding:8px 14px 8px 36px;border-radius:6px;font-size:.8rem;font-family:inherit;background:var(--accent-color);border:1px solid var(--border-color);color:var(--text-color);outline:none;transition:all .2s;width:100%}
+  .search-input:focus{border-color:var(--highlight-color);box-shadow:0 0 10px var(--glow-color)}
+  .search-input::placeholder{color:#555}
+
+  /* Spinner animation */
+  .fa-spin{animation:fa-spin 1s linear infinite}
+  @keyframes fa-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+  @media(max-width:768px){
+    .step-body-inner{padding-left:24px}
+    .chat-container{height:460px}
+    .arch-grid{flex-direction:column!important}
+    .arch-arrow{transform:rotate(90deg)}
+    .nav-menu{display:none}
+    .hamburger{display:flex}
+    .hero-grid{grid-template-columns:1fr!important;text-align:center}
+    .hero-buttons{justify-content:center}
+    .hero-title{font-size:2rem!important}
+    .section-title{font-size:1.8rem}
+    .model-grid{grid-template-columns:1fr!important}
+    .grid-features{grid-template-columns:1fr!important}
+  }
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<!-- ===== SVG SPRITE SHEET (replaces Font Awesome) ===== -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-terminal" viewBox="0 0 512 512"><path d="M32 32v448h448V32H32zm160 336l-96-96 96-96v64h128v64H192v64z"/><path d="M288 320h96v64h-96z" opacity=".5"/></symbol>
+  <symbol id="i-cube" viewBox="0 0 512 512"><path d="M239.1 6.3l-208 78c-18.7 7-31.1 25-31.1 45v225.4c0 18.2 10.3 34.8 26.5 42.9l208 104c13.5 6.8 29.4 6.8 42.9 0l208-104c16.3-8.1 26.5-24.8 26.5-42.9V129.3c0-20-12.4-37.9-31.1-44.9l-208-78C272.9-.1 255.6-.1 239.1 6.3zm24.5 50.9l176 66v192l-176 88-176-88V123.2l176-66z"/></symbol>
+  <symbol id="i-cubes" viewBox="0 0 576 512"><path d="M239.1 6.3l-208 78c-18.7 7-31.1 25-31.1 45v225.4c0 18.2 10.3 34.8 26.5 42.9l208 104c13.5 6.8 29.4 6.8 42.9 0l208-104c16.3-8.1 26.5-24.8 26.5-42.9V129.3c0-20-12.4-37.9-31.1-44.9l-208-78zM272 57.2l176 66v192l-176 88-176-88V123.2l176-66z"/><path d="M416 256v64l-32 16-32-16v-64l32-16 32 16zm96-96v64l-32 16-32-16v-64l32-16 32 16zm-192 0v64l-32 16-32-16v-64l32-16 32 16z" opacity=".6"/></symbol>
+  <symbol id="i-comments" viewBox="0 0 640 512"><path d="M208 352c-41 0-79.1-9.3-111.3-25.4C70.3 339.5 48 352 24 352c-13.3 0-24-10.7-24-24 0-6.4 2.5-12.2 6.6-16.5C19.3 296 32 272.8 32 248c0-79.5 78.8-144 176-144s176 64.5 176 144-78.8 144-176 144zm288 128c-24 0-46.3-12.5-72.7-25.4C451.1 464.7 413 474 372 474c-79.5 0-144-46.3-144-103.3S292.5 267.4 372 267.4c79.5 0 144 46.3 144 103.3 0 24.8-12.7 48-26.2 63.5 4.1 4.3 6.6 10.1 6.6 16.5 0 13.3-10.7 24-24 24h-33.6zm-192-192c0-26.5-28.7-48-64-48s-64 21.5-64 48 28.7 48 64 48 64-21.5 64-48zm224 0c0-26.5-28.7-48-64-48s-64 21.5-64 48 28.7 48 64 48 64-21.5 64-48z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 448 512"><path d="M160 400C160 408.8 152.8 416 144 416H80C71.16 416 64 408.8 64 400V192H160V400zM320 400C320 408.8 312.8 416 304 416H240C231.2 416 224 408.8 224 400V192H320V400zM352 128H96V80C96 71.16 103.2 64 112 64H144L160 32H288L304 64H336C344.8 64 352 71.16 352 80V128zM432 128H384V80C384 53.49 362.5 32 336 32H320L304 0H208L192 32H176L160 0H112C85.49 0 64 21.49 64 48V128H16C7.164 128 0 135.2 0 144C0 152.8 7.164 160 16 160H432C440.8 160 448 152.8 448 144C448 135.2 440.8 128 432 128z"/></symbol>
+  <symbol id="i-paper-plane" viewBox="0 0 512 512"><path d="M511.6 36.8l-64 448c-2.5 17.3-17.1 30.1-34.6 30.1-5.3 0-10.7-1.3-15.6-3.9L256 432l-67.2 49.6c-5.7 4.2-12.4 6.4-19.2 6.4-9.9 0-19.3-4.5-25.5-12.2-5.2-6.5-7.6-14.8-6.7-23.1l16-128-165.6-135.2c-8.6-7-13.4-17.5-13.4-28.6 0-18.8 14.6-34.3 33.2-35.5L477.6 1.2c9.5-.6 18.7 2.8 25.6 9.5 6.8 6.7 10.2 15.8 9.6 25.5l-.2 .6z"/></symbol>
+  <symbol id="i-rotate" viewBox="0 0 512 512"><path d="M464 232h-80v-80c0-8.84-7.16-16-16-16h-32c-8.84 0-16 7.16-16 16v80h-80c-8.84 0-16 7.16-16 16v32c0 8.84 7.16 16 16 16h80v80c0 8.84 7.16 16 16 16h32c8.84 0 16-7.16 16-16v-80h80c8.84 0 16-7.16 16-16v-32c0-8.84-7.16-16-16-16zm-208-96c-88.37 0-160 71.63-160 160s71.63 160 160 160c17.67 0 32-14.33 32-32s-14.33-32-32-32c-52.94 0-96-43.06-96-96s43.06-96 96-96c35.34 0 66.16 19.2 82.76 47.68L304 224h128V96l-52.48 52.48C357.24 118.24 309.12 136 256 136z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 512 512"><path d="M508.5 468.9L387.1 347.5c-2.1-2.1-4.5-3.7-7.1-4.8 20.3-29.6 32.2-65.4 32.2-103.8 0-106-86-192-192-192S28 132.9 28 238.9s86 192 192 192c38.4 0 74.2-11.9 103.8-32.2 1.1 2.6 2.7 5 4.8 7.1L449.7 527.3c4.2 4.2 10.2 6.6 16.3 6.6s12.1-2.4 16.3-6.6c9-8.9 9.1-23.5.2-32.4zm-288.5-230c0-70.7 57.3-128 128-128s128 57.3 128 128-57.3 128-128 128-128-57.3-128-128z"/></symbol>
+  <symbol id="i-filter-x" viewBox="0 0 640 512"><path d="M32.5 58.3C35.3 43.1 48.5 32 64 32h512c15.5 0 28.7 11.1 31.5 26.3l3.2 16.1C616.4 97.8 598.2 112 577.1 112H62.9c-21.1 0-39.3-14.2-43.6-34.7L32.5 58.3zM0 192c0-17.7 14.3-32 32-32h576c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zm128 128c0-17.7 14.3-32 32-32h288c17.7 0 32 14.3 32 32s-14.3 32-32 32H160c-17.7 0-32-14.3-32-32zm128 128c0-17.7 14.3-32 32-32h0c17.7 0 32 14.3 32 32v0c0 17.7-14.3 32-32 32h0c-17.7 0-32-14.3-32-32z" opacity=".3"/><path d="M475.3 304.5L384 416H256l-91.3-111.5c-7.5-9.2-20.9-10.6-30.2-3.1-9.2 7.5-10.6 20.9-3.1 30.2L225.9 448H192c-17.7 0-32 14.3-32 32s14.3 32 32 32h256c17.7 0 32-14.3 32-32s-14.3-32-32-32h-33.9l94.5-115.4c7.5-9.2 6.1-22.7-3.1-30.2-9.2-7.5-22.7-6.1-30.2 3.1z" opacity=".6"/></symbol>
+  <symbol id="i-dollar" viewBox="0 0 320 512"><path d="M160 0c-13.3 0-24 10.7-24 24V64H72c-13.3 0-24 10.7-24 24s10.7 24 24 24h64v48H72c-13.3 0-24 10.7-24 24s10.7 24 24 24h64v48H72c-13.3 0-24 10.7-24 24s10.7 24 24 24h64v80c0 13.3 10.7 24 24 24s24-10.7 24-24v-80h64c13.3 0 24-10.7 24-24s-10.7-24-24-24h-64v-48h64c13.3 0 24-10.7 24-24s-10.7-24-24-24h-64v-48h64c13.3 0 24-10.7 24-24s-10.7-24-24-24h-64V24c0-13.3-10.7-24-24-24z"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 512 512"><path d="M256 32C132.3 32 32 132.3 32 256s100.3 224 224 224 224-100.3 224-224S379.7 32 256 32zm0 384c-88.4 0-160-71.6-160-160S167.6 96 256 96s160 71.6 160 160-71.6 160-160 160z"/><path d="M352 256c0-53-43-96-96-96s-96 43-96 96 43 96 96 96 96-43 96-96z"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 512 512"><path d="M352 256c0 22.2-1.2 43.6-3.3 64H163.3c-2.2-20.4-3.3-41.8-3.3-64s1.2-43.6 3.3-64h185.4c2.2 20.4 3.3 41.8 3.3 64zm28.8-64h123.1c5.3 20.5 8.1 41.9 8.1 64s-2.8 43.5-8.1 64H380.8c2.1-20.6 3.2-42 3.2-64s-1.1-43.4-3.2-64zm112.6-32H376.7c-10-63.9-29.8-117.4-55.3-151.6C378.3 40.6 440.6 90.8 473.4 160zM256 16c30.6 0 70.4 63.2 89.5 144H166.5C185.6 79.2 225.4 16 256 16zM108.6 8.4C83.1 42.6 63.3 96.1 53.3 160H18.6C51.4 90.8 113.7 40.6 108.6 8.4zM18.6 352h34.7c10 63.9 29.8 117.4 55.3 151.6C113.7 471.4 51.4 421.2 18.6 352zm153.5 144c-19.1-80.8-58.9-144-89.5-144s-70.4 63.2-89.5 144h178.9zm62.1 0h178.9c-19.1-80.8-58.9-144-89.5-144s-70.4 63.2-89.5 144z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 512 512"><path d="M466.5 83.7l-192-80a48.15 48.15 0 00-36.9 0l-192 80C27.7 91.1 16 108.6 16 128c0 198.5 114.6 335.7 224 384 109.4-48.3 224-185.5 224-384 0-19.4-11.7-36.9-29.5-44.3zM256 464c-87.3-48-176-161.5-176-336l176-73.3 176 73.3c0 174.5-88.7 288-176 336z"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 384 512"><path d="M320 96H64v256c0 52.8 43.2 96 96 96h64c52.8 0 96-43.2 96-96V96zm-48 256c0 26.4-21.6 48-48 48h-64c-26.4 0-48-21.6-48-48V144h160v208zM0 224c0 17.7 14.3 32 32 32h32v-64H32c-17.7 0-32 14.3-32 32zm352-32h-32v64h32c17.7 0 32-14.3 32-32s-14.3-32-32-32z"/></symbol>
+  <symbol id="i-lightbulb" viewBox="0 0 384 512"><path d="M272 416c0-17.7-14.3-32-32-32h-96c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32zm-32-64c17.7 0 32-14.3 32-32s-14.3-32-32-32H144c-17.7 0-32 14.3-32 32s14.3 32 32 32h96zm96-160c0-88.4-71.6-160-160-160S16 63.6 16 152c0 57.2 30.5 110.4 80 139.2V320c0 17.7 14.3 32 32 32h128c17.7 0 32-14.3 32-32v-28.8c49.5-28.8 80-82 80-139.2zm-80 105.6c-12.2 7.2-19.6 20.3-19.6 34.4V288H176v-16c0-14.1-7.4-27.2-19.6-34.4C120.8 218.4 96 188 96 152c0-70.6 57.4-128 128-128s128 57.4 128 128c0 36-24.8 66.4-64 85.6z"/></symbol>
+  <symbol id="i-info" viewBox="0 0 512 512"><path d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256 256-114.6 256-256S397.4 0 256 0zm0 480c-123.7 0-224-100.3-224-224S132.3 32 256 32s224 100.3 224 224-100.3 224-224 224zm0-384c-13.3 0-24 10.7-24 24v128c0 13.3 10.7 24 24 24s24-10.7 24-24V120c0-13.3-10.7-24-24-24zm0 240c-17.7 0-32 14.3-32 32s14.3 32 32 32 32-14.3 32-32-14.3-32-32-32z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 512 512"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"/></symbol>
+  <symbol id="i-xmark" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256l105.3-105.4z"/></symbol>
+  <symbol id="i-ban" viewBox="0 0 512 512"><path d="M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192 41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 112 0 512 256 0 01-2 0z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 512 512"><path d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256 256-114.6 256-256S397.4 0 256 0zm0 464c-114.7 0-208-93.3-208-208S141.3 48 256 48s208 93.3 208 208-93.3 208-208 208z"/><path d="M256 296v-152c0-13.3-10.7-24-24-24s-24 10.7-24 24v152l-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l88 88c9.4 9.4 24.6 9.4 33.9 0l88-88c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47z"/><path d="M152 440h208c13.3 0 24-10.7 24-24s-10.7-24-24-24H152c-13.3 0-24 10.7-24 24s10.7 24 24 24z"/></symbol>
+  <symbol id="i-memory" viewBox="0 0 576 512"><path d="M64 32C28.7 32 0 60.7 0 96v64c0 35.3 28.7 64 64 64h32v192H64c-35.3 0-64 28.7-64 64v64c0 35.3 28.7 64 64 64h448c35.3 0 64-28.7 64-64v-64c0-35.3-28.7-64-64-64h-32V224h32c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zm96 224v192h64V256h-64zm128 0v192h64V256h-64zm128 0v192h64V256h-64z"/></symbol>
+  <symbol id="i-spinner" viewBox="0 0 512 512"><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48 21.5 48 48 48 48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48 21.5 48 48 48 48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48-48 21.5-48 48 21.5 48 48 48zm464-96c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zM142.8 142.8c-18.8-18.8-49.2-18.8-67.9 0-18.8 18.8-18.8 49.2 0 67.9 18.8 18.8 49.2 18.8 67.9 0 18.8-18.7 18.8-49.1 0-67.9zm0 285.1c18.8-18.8 18.8-49.2 0-67.9-18.8-18.8-49.2-18.8-67.9 0-18.8 18.8-18.8 49.2 0 67.9 18.7 18.8 49.1 18.8 67.9 0zM437.1 142.8c-18.8 18.8-18.8 49.2 0 67.9 18.8 18.8 49.2 18.8 67.9 0 18.8-18.8 18.8-49.2 0-67.9-18.7-18.8-49.1-18.8-67.9 0zm0 285.1c-18.8-18.8-18.8-49.2 0-67.9 18.8-18.8 49.2-18.8 67.9 0 18.8 18.8 18.8 49.2 0 67.9-18.8 18.8-49.1 18.8-67.9 0z"/></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 448 512"><path d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224H32c-17.7 0-32 14.3-32 32s14.3 32 32 32h306.8L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"/></symbol>
+  <symbol id="i-arrow-up" viewBox="0 0 448 512"><path d="M34.9 289.5l-22.2-22.2c-9.4-9.4-9.4-24.6 0-33.9l154.8-154.8c9.4-9.4 24.6-9.4 33.9 0L356.2 233.4c9.4 9.4 9.4 24.6 0 33.9L334 289.5c-9.4 9.4-24.6 9.4-33.9 0l-76-76v205.6c0 13.3-10.7 24-24 24h-32c-13.3 0-24-10.7-24-24V213.5l-76 76c-9.4 9.4-24.6 9.4-33.9 0z"/></symbol>
+  <symbol id="i-external" viewBox="0 0 512 512"><path d="M432 320H320V208l95.9-95.9c8.3-8.3 12.9-19.5 12.9-31.2 0-24.4-19.8-44.2-44.2-44.2-11.7 0-22.9 4.6-31.2 12.9L256 144V32c0-17.7-14.3-32-32-32H160c-17.7 0-32 14.3-32 32v112L32.1 48.1C23.8 39.8 12.6 35.2.9 35.2-23.5 35.2-43.3 55-43.3 79.4c0 11.7 4.6 22.9 12.9 31.2L64 208v112H-48c-17.7 0-32 14.3-32 32v64c0 17.7 14.3 32 32 32h112v112c0 17.7 14.3 32 32 32h64c17.7 0 32-14.3 32-32V416h112c17.7 0 32-14.3 32-32v-64z" transform="translate(48,0)"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 512 512"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></symbol>
+  <symbol id="i-desktop" viewBox="0 0 576 512"><path d="M528 0H48C21.5 0 0 21.5 0 48v320c0 26.5 21.5 48 48 48h192l-16 48h-72c-13.3 0-24 10.7-24 24s10.7 24 24 24h272c13.3 0 24-10.7 24-24s-10.7-24-24-24h-72l-16-48h192c26.5 0 48-21.5 48-48V48c0-26.5-21.5-48-48-48zM512 288H64V64h448v224z"/></symbol>
+  <symbol id="i-cloud-arrow" viewBox="0 0 640 512"><path d="M537.6 226.6c4.1-10.7 6.4-22.4 6.4-34.6 0-53-43-96-96-96-19.7 0-38.1 6-53.3 16.2C367 64.2 315.3 32 256 32c-88.4 0-160 71.6-160 160 0 2.7.1 5.4.2 8.1C40.2 213.4 0 261.5 0 320c0 79.5 64.5 144 144 144h368c70.7 0 128-57.3 128-128 0-61.9-44-113.6-102.4-125.4z"/><path d="M320 480l-64-64h128l-64 64z" opacity=".5"/></symbol>
+  <symbol id="i-brain" viewBox="0 0 512 512"><path d="M400 64c-35.3 0-64 28.7-64 64v16H176v-16c0-35.3-28.7-64-64-64S48 93.7 48 128v16H32c-17.7 0-32 14.3-32 32v64c0 17.7 14.3 32 32 32h16v80H32c-17.7 0-32 14.3-32 32v64c0 17.7 14.3 32 32 32h16v16c0 35.3 28.7 64 64 64s64-28.7 64-64v-16h160v16c0 35.3 28.7 64 64 64s64-28.7 64-64v-16h16c17.7 0 32-14.3 32-32v-64c0-17.7-14.3-32-32-32h-16v-80h16c17.7 0 32-14.3 32-32v-64c0-17.7-14.3-32-32-32h-16v-16c0-35.3-28.7-64-64-64z"/></symbol>
+  <symbol id="i-github" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-56.6 104.2-112.5 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></symbol>
+  <symbol id="i-python" viewBox="0 0 448 512"><path d="M439.8 238.4c-1.2-21.3-3.3-42.6-9.7-63.2-7.3-23.2-23.5-40.6-46.5-50.1-13.8-5.7-28.3-8.9-43.1-10.4-15.4-1.6-30.8-2-46.3-2H160c-15.5 0-30.9.4-46.3 2-14.8 1.5-29.3 4.7-43.1 10.4-23 9.5-39.2 26.9-46.5 50.1-6.4 20.6-8.5 41.9-9.7 63.2C13.4 259.6 13 280.8 13 302v36c0 21.2.4 42.4 1.4 63.6 1.2 21.3 3.3 42.6 9.7 63.2 7.3 23.2 23.5 40.6 46.5 50.1 13.8 5.7 28.3 8.9 43.1 10.4 15.4 1.6 30.8 2 46.3 2h134.2c15.5 0 30.9-.4 46.3-2 14.8-1.5 29.3-4.7 43.1-10.4 23-9.5 39.2-26.9 46.5-50.1 6.4-20.6 8.5-41.9 9.7-63.2 1-21.2 1.4-42.4 1.4-63.6v-36c0-21.2-.4-42.4-1.4-63.6zM176 352h-32V192h32v160zm96 0h-32V192h32v160z" opacity=".7"/><path d="M224 0c-61.9 0-112 50.1-112 112v40h80V96c0-17.7 14.3-32 32-32s32 14.3 32 32v56h80v-40C336 50.1 285.9 0 224 0zM112 400v40c0 39.7 32.3 72 72 72h80c39.7 0 72-32.3 72-72v-40H112z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 512 512"><path d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5l-45.3-45.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7.4 498.8 5.8 504.2c5.4 5.4 14.5 7.3 23 4.8l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.3 291.7 157.3z"/></symbol>
+  <symbol id="i-exclamation" viewBox="0 0 512 512"><path d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256 256-114.6 256-256S397.4 0 256 0zm0 480c-123.7 0-224-100.3-224-224S132.3 32 256 32s224 100.3 224 224-100.3 224-224 224zm0-352c-13.3 0-24 10.7-24 24v112c0 13.3 10.7 24 24 24s24-10.7 24-24V152c0-13.3-10.7-24-24-24zm0 208c-17.7 0-32 14.3-32 32s14.3 32 32 32 32-14.3 32-32-14.3-32-32-32z"/></symbol>
+  <symbol id="i-book" viewBox="0 0 448 512"><path d="M448 360V24c0-13.3-10.7-24-24-24H96C43 0 0 43 0 96v320c0 53 43 96 96 96h328c13.3 0 24-10.7 24-24v-16c0-7.5-3.5-14.3-8.9-18.7-4.2-15.4-4.2-59.3 0-74.7 5.4-4.3 8.9-11.1 8.9-18.6zM128 134c0-3.3 2.7-6 6-6h212c3.3 0 6 2.7 6 6v20c0 3.3-2.7 6-6 6H134c-3.3 0-6-2.7-6-6v-20zm0 64c0-3.3 2.7-6 6-6h212c3.3 0 6 2.7 6 6v20c0 3.3-2.7 6-6 6H134c-3.3 0-6-2.7-6-6v-20zm253.4 250H96c-17.7 0-32-14.3-32-32s14.3-32 32-32h285.4c-1.9 17.1-1.9 46.9 0 64z"/></symbol>
+</svg>
+
+<div class="matrix-rain"></div>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="content-wrapper">
+
+  <!-- Nav -->
+  <nav class="navbar" id="mainNav" aria-label="Main navigation">
+    <div class="nav-container">
+      <a href="#" class="nav-logo"><span class="logo-text">&gt;_ Ollama-Colab</span></a>
+      <ul class="nav-menu">
+        <li><a href="#models" class="nav-link">Models</a></li>
+        <li><a href="#how-it-works" class="nav-link">Architecture</a></li>
+        <li><a href="#setup" class="nav-link">Setup</a></li>
+        <li><a href="#demo" class="nav-link">Live Demo</a></li>
+        <li><a href="#api" class="nav-link">API</a></li>
+        <li><a href="https://github.com/TheRealFREDP3D/Ollama-Colab" target="_blank" rel="noopener" class="nav-link"><svg class="icon"><use href="#i-github"/></svg> Repo</a></li>
+      </ul>
+      <div class="hamburger" onclick="toggleMobileMenu()" aria-label="Toggle menu"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary);"><span class="status-dot checking" id="navStatus"></span><span id="navStatusText">checking...</span></div>
+    </div>
+    <div id="mobileMenu" style="display:none;padding:10px 20px 20px;border-top:1px solid var(--border-color);background:rgba(10,10,10,0.98);">
+      <a href="#models" class="nav-link" style="display:block;padding:10px 0;" onclick="closeMobileMenu()">Models</a>
+      <a href="#how-it-works" class="nav-link" style="display:block;padding:10px 0;" onclick="closeMobileMenu()">Architecture</a>
+      <a href="#setup" class="nav-link" style="display:block;padding:10px 0;" onclick="closeMobileMenu()">Setup</a>
+      <a href="#demo" class="nav-link" style="display:block;padding:10px 0;" onclick="closeMobileMenu()">Live Demo</a>
+      <a href="#api" class="nav-link" style="display:block;padding:10px 0;" onclick="closeMobileMenu()">API</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-background"></div>
+    <div class="hero-grid grid grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;width:100%;max-width:1200px;margin:0 auto;padding:0 20px;padding-top:70px;">
+      <div style="z-index:2;">
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:6px;border:1px solid var(--border-color);background:rgba(42,42,42,.5);margin-bottom:1.5rem;font-size:12px;color:var(--text-secondary);"><span class="status-dot online" id="heroStatus"></span><span id="heroStatusText">connecting to instance...</span></div>
+        <h1 class="hero-title" style="font-size:3rem;font-weight:700;margin-bottom:1rem;background:var(--gradient-accent);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Run Powerful<br>LLMs <span style="-webkit-text-fill-color:var(--highlight-color);">For Free</span></h1>
+        <p class="typing-cursor" style="font-size:1.1rem;color:var(--highlight-color);margin-bottom:1.5rem;text-shadow:0 0 10px var(--glow-color);">google colab + ollama + cloudflare tunnel</p>
+        <p style="font-size:.95rem;color:var(--text-secondary);margin-bottom:2rem;line-height:1.8;">Browse, pull, and run state-of-the-art open-source models on free cloud GPUs. No expensive hardware. No API keys.</p>
+        <div class="hero-buttons flex" style="gap:1rem;flex-wrap:wrap;">
+          <a href="#models" class="btn"><svg class="icon icon-sm" style="margin-right:6px"><use href="#i-cube"/></svg> Browse Models</a>
+          <a href="#demo" class="btn btn-secondary"><svg class="icon icon-sm" style="margin-right:6px"><use href="#i-terminal"/></svg> Live Demo</a>
+        </div>
+      </div>
+      <div style="z-index:2;display:flex;justify-content:center;">
+        <div style="width:100%;max-width:460px;background:rgba(42,42,42,.5);border:1px solid var(--border-color);border-radius:12px;overflow:hidden;box-shadow:0 0 40px rgba(0,212,170,.08);">
+          <div style="padding:10px 16px;background:rgba(42,42,42,.3);border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:8px;"><div class="code-dots"><span></span><span></span><span></span></div><span style="font-size:11px;color:var(--text-secondary);margin-left:8px;">ollama-colab</span></div>
+          <div style="padding:20px;font-size:12px;line-height:2;color:var(--text-secondary);" id="terminalMockup">
+            <div><span style="color:var(--highlight-color);">$</span> ollama pull llama3.1</div>
+            <div style="color:#555;">pulling manifest...</div>
+            <div style="color:#555;">success</div>
+            <div style="margin-top:8px;"><span style="color:var(--highlight-color);">$</span> cloudflared tunnel --url localhost:11434</div>
+            <div style="color:var(--highlight-secondary);">https://xxx.trycloudflare.com</div>
+            <div style="margin-top:8px;"><span style="color:var(--highlight-color);">$</span> curl -X POST /api/chat</div>
+            <div style="color:var(--text-color);">{"model":"llama3.1","stream":true}</div>
+            <div style="margin-top:8px;color:var(--highlight-color);" id="termTyping"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-indicator"><div class="scroll-arrow"></div></div>
+  </header>
+
+  <!-- MODEL BROWSER -->
+  <section id="models" style="padding:100px 0;background:var(--secondary-color);border-top:1px solid var(--border-color);border-bottom:1px solid var(--border-color);">
+    <div class="container">
+      <h2 class="section-title fade-in">Model Browser</h2>
+      <p class="text-center fade-in" style="color:var(--text-secondary);max-width:600px;margin:-1.5rem auto 2rem;font-size:.85rem;">Browse the Ollama library. See what fits your GPU at a glance. Pull models directly from here.</p>
+      <div class="fade-in" style="transition-delay:.1s;margin-bottom:1.5rem;">
+        <div class="flex flex-wrap items-center" style="gap:1rem;margin-bottom:1rem;">
+          <div class="flex items-center" style="gap:8px;">
+            <span style="font-size:12px;color:var(--text-secondary);white-space:nowrap;">gpu:</span>
+            <select class="gpu-select" id="gpuSelect" onchange="onGpuChange()" aria-label="Select GPU">
+              <option value="16384">T4 — 16 GB (Free)</option>
+              <option value="24576">L4 — 24 GB</option>
+              <option value="16384">V100 — 16 GB</option>
+              <option value="40960">A100 — 40 GB</option>
+              <option value="81920">A100 — 80 GB</option>
+              <option value="custom">Custom...</option>
+            </select>
+          </div>
+          <div id="customVramWrap" style="display:none;align-items:center;gap:8px;">
+            <input type="number" id="customVram" value="16384" min="1024" max="131072" step="1024" style="width:100px;padding:8px 10px;border-radius:6px;font-size:.8rem;font-family:inherit;background:var(--accent-color);border:1px solid var(--border-color);color:var(--text-color);outline:none;" oninput="onGpuChange()" aria-label="Custom VRAM in MB">
+            <span style="font-size:11px;color:var(--text-secondary);">MB</span>
+          </div>
+          <div style="position:relative;flex:1;min-width:200px;max-width:360px;">
+            <svg class="icon icon-sm" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-secondary);"><use href="#i-search"/></svg>
+            <input type="text" class="search-input" id="modelSearch" placeholder="search models..." oninput="renderModels()" aria-label="Search models">
+          </div>
+        </div>
+        <div class="flex flex-wrap" style="gap:.5rem;margin-bottom:1.2rem;">
+          <button class="filter-chip active" data-filter="all" onclick="setFilter(this)">all</button>
+          <button class="filter-chip" data-filter="chat" onclick="setFilter(this)">chat</button>
+          <button class="filter-chip" data-filter="code" onclick="setFilter(this)">code</button>
+          <button class="filter-chip" data-filter="vision" onclick="setFilter(this)">vision</button>
+          <button class="filter-chip" data-filter="embedding" onclick="setFilter(this)">embedding</button>
+          <button class="filter-chip" data-filter="fits" onclick="setFilter(this)">fits gpu</button>
+          <button class="filter-chip" data-filter="pulled" onclick="setFilter(this)">pulled</button>
+        </div>
+        <div class="flex flex-wrap" style="gap:.5rem;margin-bottom:1.5rem;" id="modelStats"></div>
+      </div>
+      <div class="model-grid fade-in" id="modelGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;transition-delay:.2s;"></div>
+      <div id="noModelsMsg" style="display:none;text-align:center;padding:3rem;color:var(--text-secondary);font-size:.9rem;">
+        <svg class="icon icon-xl" style="display:block;margin:0 auto 1rem;opacity:.3;"><use href="#i-filter-x"/></svg>
+        no models match your filter.
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section style="padding:100px 0;">
+    <div class="container">
+      <h2 class="section-title fade-in">Why This Works</h2>
+      <div class="grid grid-features" style="gap:2rem;">
+        <div class="feature-card fade-in"><div class="feature-icon"><svg class="icon icon-xl"><use href="#i-dollar"/></svg></div><h3 style="font-size:1.1rem;margin-bottom:.8rem;color:var(--highlight-color);">Completely Free</h3><p style="color:var(--text-secondary);font-size:.85rem;line-height:1.7;">Google Colab provides free T4 GPU access. Cloudflare Tunnels are free too. Zero cost, full power.</p></div>
+        <div class="feature-card fade-in" style="transition-delay:.1s"><div class="feature-icon"><svg class="icon icon-xl"><use href="#i-gauge"/></svg></div><h3 style="font-size:1.1rem;margin-bottom:.8rem;color:var(--highlight-color);">GPU Accelerated</h3><p style="color:var(--text-secondary);font-size:.85rem;line-height:1.7;">NVIDIA T4 with 16GB VRAM runs 7B-13B parameter models at blazing speed with full GPU offloading.</p></div>
+        <div class="feature-card fade-in" style="transition-delay:.2s"><div class="feature-icon"><svg class="icon icon-xl"><use href="#i-globe"/></svg></div><h3 style="font-size:1.1rem;margin-bottom:.8rem;color:var(--highlight-color);">Access Anywhere</h3><p style="color:var(--text-secondary);font-size:.85rem;line-height:1.7;">Cloudflare Tunnel exposes your Ollama instance to the internet. No port forwarding needed.</p></div>
+        <div class="feature-card fade-in" style="transition-delay:.1s"><div class="feature-icon"><svg class="icon icon-xl"><use href="#i-shield"/></svg></div><h3 style="font-size:1.1rem;margin-bottom:.8rem;color:var(--highlight-color);">Private and Secure</h3><p style="color:var(--text-secondary);font-size:.85rem;line-height:1.7;">Your data stays between you and the model. No API keys, no third-party logging, no telemetry.</p></div>
+        <div class="feature-card fade-in" style="transition-delay:.2s"><div class="feature-icon"><svg class="icon icon-xl"><use href="#i-cubes"/></svg></div><h3 style="font-size:1.1rem;margin-bottom:.8rem;color:var(--highlight-color);">Any Ollama Model</h3><p style="color:var(--text-secondary);font-size:.85rem;line-height:1.7;">Llama 3.1, Mistral, Qwen, Phi-3, Gemma, CodeLlama — pull any model from the Ollama registry.</p></div>
+        <div class="feature-card fade-in" style="transition-delay:.3s"><div class="feature-icon"><svg class="icon icon-xl"><use href="#i-plug"/></svg></div><h3 style="font-size:1.1rem;margin-bottom:.8rem;color:var(--highlight-color);">OpenAI Compatible</h3><p style="color:var(--text-secondary);font-size:.85rem;line-height:1.7;">Ollama's OpenAI-compatible API works with existing tools, SDKs, and chat interfaces seamlessly.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture -->
+  <section id="how-it-works" style="padding:100px 0;background:var(--secondary-color);border-top:1px solid var(--border-color);border-bottom:1px solid var(--border-color);">
+    <div class="container">
+      <h2 class="section-title fade-in">How It Works</h2>
+      <p class="text-center fade-in" style="color:var(--text-secondary);max-width:600px;margin:-1.5rem auto 3rem;font-size:.9rem;">Three components form a pipeline from your browser to the GPU and back.</p>
+      <div class="fade-in" style="transition-delay:.1s;">
+        <div class="arch-grid flex items-center justify-center" style="gap:1.5rem;flex-wrap:wrap;">
+          <div class="arch-node" id="archBrowser" style="flex:1;min-width:200px;max-width:260px;"><div style="font-size:2rem;color:var(--highlight-color);margin-bottom:.8rem;"><svg class="icon icon-xl"><use href="#i-desktop"/></svg></div><div style="font-weight:600;margin-bottom:.5rem;">Your Browser</div><div style="font-size:11px;color:var(--text-secondary);">Sends chat requests via the Cloudflare tunnel URL</div></div>
+          <div class="arch-arrow"><svg class="icon"><use href="#i-arrow-right"/></svg></div>
+          <div class="arch-node" id="archCF" style="flex:1;min-width:200px;max-width:260px;"><div style="font-size:2rem;color:var(--highlight-color);margin-bottom:.8rem;"><svg class="icon icon-xl"><use href="#i-cloud-arrow"/></svg></div><div style="font-weight:600;margin-bottom:.5rem;">Cloudflare Tunnel</div><div style="font-size:11px;color:var(--text-secondary);">Public URL routes traffic securely to Colab</div></div>
+          <div class="arch-arrow"><svg class="icon"><use href="#i-arrow-right"/></svg></div>
+          <div class="arch-node" id="archColab" style="flex:1;min-width:200px;max-width:260px;"><div style="font-size:2rem;color:var(--highlight-color);margin-bottom:.8rem;"><svg class="icon icon-xl"><use href="#i-python"/></svg></div><div style="font-weight:600;margin-bottom:.5rem;">Google Colab</div><div style="font-size:11px;color:var(--text-secondary);">Free T4 GPU runs Ollama server</div></div>
+        </div>
+        <div class="text-center" style="margin-top:1rem;font-size:11px;color:var(--text-secondary);"><svg class="icon icon-sm" style="color:var(--highlight-color);opacity:.5;"><use href="#i-arrow-up"/></svg> runs inside Colab VM</div>
+        <div class="flex justify-center" style="margin-top:.5rem;"><div class="arch-node" id="archOllama" style="max-width:260px;"><div style="font-size:2rem;color:var(--highlight-color);margin-bottom:.8rem;"><svg class="icon icon-xl"><use href="#i-brain"/></svg></div><div style="font-weight:600;margin-bottom:.5rem;">Ollama + LLM</div><div style="font-size:11px;color:var(--text-secondary);">Model runs entirely on GPU with full inference</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Setup -->
+  <section id="setup" style="padding:100px 0;">
+    <div class="container-sm">
+      <h2 class="section-title fade-in">Setup in 4 Steps</h2>
+      <p class="text-center fade-in" style="color:var(--text-secondary);margin:-1.5rem auto 3rem;font-size:.9rem;">From zero to a running cloud LLM in under five minutes.</p>
+      <div class="flex flex-col" style="gap:1rem;">
+        <div class="step-card open fade-in"><div class="step-header" onclick="toggleStep(this)"><div class="step-number">1</div><div><div style="font-weight:600;">Open the Colab Notebook</div><div style="font-size:12px;color:var(--text-secondary);">Get the notebook and enable GPU runtime</div></div><svg class="icon step-chevron"><use href="#i-chevron-down"/></svg></div><div class="step-body"><div class="step-body-inner"><p style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem;">Open the notebook from GitHub. Before running anything, enable GPU runtime.</p><div class="code-block" style="margin-bottom:1rem;"><div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span style="font-size:11px;color:var(--text-secondary);">action</span><button class="copy-btn" onclick="copyText('Go to: https://github.com/TheRealFREDP3D/Ollama-Colab\nClick &quot;Open in Colab&quot;\nRuntime > Change runtime type > T4 GPU > Save',this)"><svg class="icon icon-sm"><use href="#i-copy"/></svg> copy</button></div><div class="code-content">Go to: <span class="string">https://github.com/TheRealFREDP3D/Ollama-Colab</span>
+Click <span class="string">"Open in Colab"</span>
+<span class="cmd">Runtime</span> > <span class="cmd">Change runtime type</span> > <span class="flag">T4 GPU</span> > Save</div></div><a href="https://github.com/TheRealFREDP3D/Ollama-Colab" target="_blank" rel="noopener" style="color:var(--highlight-color);font-size:13px;text-decoration:none;text-shadow:0 0 8px var(--glow-color);"><svg class="icon icon-sm" style="margin-right:4px"><use href="#i-github"/></svg> Open Repository <svg class="icon icon-sm"><use href="#i-external"/></svg></a></div></div></div>
+        <div class="step-card fade-in" style="transition-delay:.1s"><div class="step-header" onclick="toggleStep(this)"><div class="step-number">2</div><div><div style="font-weight:600;">Install Ollama</div><div style="font-size:12px;color:var(--text-secondary);">Run the installation cell</div></div><svg class="icon step-chevron"><use href="#i-chevron-down"/></svg></div><div class="step-body"><div class="step-body-inner"><p style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem;">First cell downloads and installs Ollama. About 30 seconds.</p><div class="code-block"><div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span style="font-size:11px;color:var(--text-secondary);">bash</span><button class="copy-btn" onclick="copyText('!curl -fsSL https://ollama.com/install.sh | sh',this)"><svg class="icon icon-sm"><use href="#i-copy"/></svg> copy</button></div><div class="code-content"><span class="cmd">!curl</span> -fsSL <span class="string">https://ollama.com/install.sh</span> | sh</div></div></div></div></div>
+        <div class="step-card fade-in" style="transition-delay:.2s"><div class="step-header" onclick="toggleStep(this)"><div class="step-number">3</div><div><div style="font-weight:600;">Pull a Model</div><div style="font-size:12px;color:var(--text-secondary);">Use the Model Browser above, or run manually</div></div><svg class="icon step-chevron"><use href="#i-chevron-down"/></svg></div><div class="step-body"><div class="step-body-inner"><p style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem;">Choose a model that fits your GPU's VRAM. 7B-13B models work great on T4.</p><div class="code-block" style="margin-bottom:1rem;"><div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span style="font-size:11px;color:var(--text-secondary);">bash</span><button class="copy-btn" onclick="copyText('!ollama pull llama3.1\n!ollama pull mistral\n!ollama pull qwen2.5-coder:7b',this)"><svg class="icon icon-sm"><use href="#i-copy"/></svg> copy</button></div><div class="code-content"><span class="cmd">!ollama pull</span> <span class="string">llama3.1</span>
+<span class="cmd">!ollama pull</span> <span class="string">mistral</span>
+<span class="cmd">!ollama pull</span> <span class="string">qwen2.5-coder:7b</span></div></div><div class="info-box" style="font-size:12px;"><svg class="icon icon-sm" style="margin-right:8px;"><use href="#i-info"/></svg>Tip: Use the Model Browser above to see exactly which models fit your GPU and pull them with one click.</div></div></div></div>
+        <div class="step-card fade-in" style="transition-delay:.3s"><div class="step-header" onclick="toggleStep(this)"><div class="step-number">4</div><div><div style="font-weight:600;">Start Cloudflare Tunnel</div><div style="font-size:12px;color:var(--text-secondary);">Expose Ollama to the internet</div></div><svg class="icon step-chevron"><use href="#i-chevron-down"/></svg></div><div class="step-body"><div class="step-body-inner"><p style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem;">Run <code style="font-size:12px;color:var(--highlight-color);background:rgba(0,212,170,.1);padding:2px 6px;border-radius:4px;">cloudflared</code> to create a quick tunnel. You get a random <code style="font-size:12px;color:var(--highlight-color);background:rgba(0,212,170,.1);padding:2px 6px;border-radius:4px;">.trycloudflare.com</code> URL.</p><div class="code-block" style="margin-bottom:1rem;"><div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span style="font-size:11px;color:var(--text-secondary);">bash</span><button class="copy-btn" onclick="copyText('!ollama serve &\n!cloudflared tunnel --url http://localhost:11434',this)"><svg class="icon icon-sm"><use href="#i-copy"/></svg> copy</button></div><div class="code-content"><span class="comment"># Start Ollama server in background</span>
+<span class="cmd">!ollama serve</span> &
+
+<span class="comment"># Expose via Cloudflare Tunnel</span>
+<span class="cmd">!cloudflared</span> <span class="flag">tunnel</span> <span class="flag">--url</span> <span class="string">http://localhost:11434</span></div></div><div class="info-box" style="font-size:12px;"><svg class="icon icon-sm" style="margin-right:8px;"><use href="#i-info"/></svg>The URL changes each restart. It only stays active while the Colab session is running.</div></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live Demo -->
+  <section id="demo" style="padding:100px 0;background:var(--secondary-color);border-top:1px solid var(--border-color);border-bottom:1px solid var(--border-color);">
+    <div class="container-sm">
+      <h2 class="section-title fade-in">Live Demo</h2>
+      <p class="text-center fade-in" style="color:var(--text-secondary);max-width:550px;margin:-1.5rem auto 2.5rem;font-size:.9rem;">Connected to the actual Ollama instance on Colab. Responses stream in real-time.</p>
+      <div class="fade-in" style="margin-bottom:1rem;transition-delay:.1s;">
+        <div class="flex items-center flex-wrap" style="gap:.5rem;">
+          <span style="font-size:12px;color:var(--text-secondary);white-space:nowrap;">endpoint:</span>
+          <input type="text" id="endpointInput" value="https://comics-block-caught-purchased.trycloudflare.com" style="flex:1;min-width:200px;padding:8px 14px;border-radius:6px;font-size:12px;font-family:inherit;outline:none;background:var(--accent-color);border:1px solid var(--border-color);color:var(--text-color);transition:all .2s;" onfocus="this.style.borderColor='var(--highlight-color)';this.style.boxShadow='0 0 10px var(--glow-color)'" onblur="this.style.borderColor='var(--border-color)';this.style.boxShadow='none'" aria-label="Ollama endpoint URL">
+          <button onclick="checkEndpoint()" style="padding:8px 14px;border-radius:6px;font-size:12px;font-family:inherit;background:var(--accent-color);border:1px solid var(--border-color);color:var(--text-secondary);cursor:pointer;transition:all .3s;" onmouseover="this.style.color='var(--highlight-color)';this.style.boxShadow='0 0 10px var(--glow-color)'" onmouseout="this.style.color='var(--text-secondary)';this.style.boxShadow='none'" aria-label="Check connection"><svg class="icon icon-sm"><use href="#i-rotate"/></svg></button>
+        </div>
+      </div>
+      <div class="fade-in" style="margin-bottom:1.5rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;transition-delay:.15s;">
+        <span style="font-size:12px;color:var(--text-secondary);">model:</span>
+        <button class="model-chip selected" data-model="llama3.1" onclick="selectModel(this)">llama3.1</button>
+        <button class="model-chip" data-model="mistral" onclick="selectModel(this)">mistral</button>
+        <button class="model-chip" data-model="qwen2.5-coder:7b" onclick="selectModel(this)">qwen2.5-coder:7b</button>
+        <button class="model-chip" data-model="phi3" onclick="selectModel(this)">phi3</button>
+        <button class="model-chip" data-model="gemma2:9b" onclick="selectModel(this)">gemma2:9b</button>
+      </div>
+      <div class="chat-container fade-in" style="transition-delay:.2s;" role="log" aria-label="Chat messages">
+        <div class="chat-header">
+          <div class="flex items-center" style="gap:12px;">
+            <div style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(0,212,170,.15);color:var(--highlight-color);font-size:14px;"><svg class="icon"><use href="#i-comments"/></svg></div>
+            <div><div style="font-weight:600;font-size:13px;" id="chatModelName">llama3.1</div><div style="font-size:11px;display:flex;align-items:center;gap:6px;color:var(--text-secondary);"><span class="status-dot checking" id="chatStatus"></span><span id="chatStatusText">connecting...</span></div></div>
+          </div>
+          <button onclick="clearChat()" style="font-size:11px;padding:5px 12px;border-radius:6px;color:var(--text-secondary);border:1px solid var(--border-color);background:transparent;cursor:pointer;font-family:inherit;transition:all .3s;" onmouseover="this.style.borderColor='var(--highlight-color)';this.style.color='var(--highlight-color)'" onmouseout="this.style.borderColor='var(--border-color)';this.style.color='var(--text-secondary)'" aria-label="Clear chat"><svg class="icon icon-sm" style="margin-right:4px"><use href="#i-trash"/></svg> clear</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"><div class="msg msg-system">connected to colab gpu via cloudflare tunnel</div></div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="chatInput" rows="1" placeholder="send a message..." onkeydown="handleChatKey(event)" oninput="autoResize(this)" aria-label="Chat message input"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Send message"><svg class="icon"><use href="#i-paper-plane"/></svg></button>
+        </div>
+      </div>
+      <p class="fade-in text-center" style="font-size:11px;color:var(--text-secondary);margin-top:1rem;transition-delay:.3s;"><svg class="icon icon-sm" style="color:var(--highlight-color);opacity:.6;margin-right:4px;"><use href="#i-exclamation"/></svg>if the instance is offline, re-run the notebook to reconnect.</p>
+    </div>
+  </section>
+
+  <!-- API -->
+  <section id="api" style="padding:100px 0;">
+    <div class="container-sm">
+      <h2 class="section-title fade-in">Use the API</h2>
+      <p class="text-center fade-in" style="color:var(--text-secondary);max-width:550px;margin:-1.5rem auto 2.5rem;font-size:.9rem;">Once your tunnel is running, call Ollama's REST API from any application.</p>
+      <div class="fade-in" style="transition-delay:.1s;">
+        <div class="flex" style="gap:1px;">
+          <button class="tab-btn active" onclick="switchTab(this,'tab-curl')">cURL</button>
+          <button class="tab-btn" onclick="switchTab(this,'tab-python')">Python</button>
+          <button class="tab-btn" onclick="switchTab(this,'tab-js')">JavaScript</button>
+        </div>
+        <div class="code-block" style="border-radius:0 8px 8px 8px;">
+          <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span style="font-size:11px;color:var(--text-secondary);" id="tabLabel">curl</span><button class="copy-btn" id="tabCopyBtn" onclick="copyCurrentTab(this)"><svg class="icon icon-sm"><use href="#i-copy"/></svg> copy</button></div>
+          <div class="code-content" id="tab-curl"><span class="cmd">curl</span> <span class="flag">-X POST</span> <span class="string">https://YOUR-URL.trycloudflare.com/api/chat</span> \
+  <span class="flag">-H</span> <span class="string">"Content-Type: application/json"</span> \
+  <span class="flag">-d</span> <span class="string">'{
+    "model": "llama3.1",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "stream": false
+  }'</span></div>
+          <div class="code-content" id="tab-python" style="display:none;"><span class="keyword">import</span> requests
+
+response = requests.post(<span class="string">"https://YOUR-URL.trycloudflare.com/api/chat"</span>, json={
+    <span class="string">"model"</span>: <span class="string">"llama3.1"</span>,
+    <span class="string">"messages"</span>: [{<span class="string">"role"</span>: <span class="string">"user"</span>, <span class="string">"content"</span>: <span class="string">"Hello!"</span>}],
+    <span class="string">"stream"</span>: <span class="keyword">False</span>
+})
+<span class="keyword">print</span>(response.json()[<span class="string">"message"</span>][<span class="string">"content"</span>])</div>
+          <div class="code-content" id="tab-js" style="display:none;"><span class="keyword">const</span> resp = <span class="keyword">await</span> <span class="cmd">fetch</span>(<span class="string">"https://YOUR-URL.trycloudflare.com/api/chat"</span>, {
+  method: <span class="string">"POST"</span>,
+  headers: { <span class="string">"Content-Type"</span>: <span class="string">"application/json"</span> },
+  body: JSON.stringify({
+    model: <span class="string">"llama3.1"</span>,
+    messages: [{ role: <span class="string">"user"</span>, content: <span class="string">"Hello!"</span> }],
+    stream: <span class="keyword">false</span>
+  })
+});
+<span class="keyword">const</span> data = <span class="keyword">await</span> resp.json();
+console.log(data.message.content);</div>
+        </div>
+      </div>
+      <div class="fade-in" style="margin-top:2rem;transition-delay:.2s;">
+        <h3 style="font-size:1.2rem;margin-bottom:1rem;color:var(--highlight-color);text-shadow:0 0 10px var(--glow-color);"><svg class="icon" style="margin-right:8px;"><use href="#i-lightbulb"/></svg>OpenAI Compatible Endpoint</h3>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem;">Ollama also exposes <code style="font-size:12px;color:var(--highlight-color);background:rgba(0,212,170,.1);padding:2px 6px;border-radius:4px;">/v1/chat/completions</code>. Point any OpenAI SDK at your tunnel:</p>
+        <div class="code-block"><div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><span style="font-size:11px;color:var(--text-secondary);">python</span><button class="copy-btn" onclick="copyText('from openai import OpenAI\n\nclient = OpenAI(\n    base_url=\"https://YOUR-URL.trycloudflare.com/v1\",\n    api_key=\"ollama\"\n)\n\nresponse = client.chat.completions.create(\n    model=\"llama3.1\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello!\"}]\n)\nprint(response.choices[0].message.content)',this)"><svg class="icon icon-sm"><use href="#i-copy"/></svg> copy</button></div><div class="code-content"><span class="keyword">from</span> openai <span class="keyword">import</span> OpenAI
+
+client = OpenAI(
+    base_url=<span class="string">"https://YOUR-URL.trycloudflare.com/v1"</span>,
+    api_key=<span class="string">"ollama"</span>
+)
+
+response = client.chat.completions.create(
+    model=<span class="string">"llama3.1"</span>,
+    messages=[{<span class="string">"role"</span>: <span class="string">"user"</span>, <span class="string">"content"</span>: <span class="string">"Hello!"</span>}]
+)
+<span class="cmd">print</span>(response.choices[0].message.content)</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content container">
+      <p style="color:var(--highlight-color);font-weight:600;text-shadow:0 0 10px var(--glow-color);">&gt;_ Ollama on Colab</p>
+      <p>Free cloud LLMs — no hardware required</p>
+      <div class="flex justify-center" style="gap:1.5rem;margin-top:1rem;">
+        <a href="https://github.com/TheRealFREDP3D/Ollama-Colab" target="_blank" rel="noopener" style="color:var(--text-secondary);text-decoration:none;transition:all .3s;font-size:13px;" onmouseover="this.style.color='var(--highlight-color)';this.style.textShadow='0 0 8px var(--glow-color)'" onmouseout="this.style.color='var(--text-secondary)';this.style.textShadow='none'"><svg class="icon icon-sm" style="margin-right:4px"><use href="#i-github"/></svg> Source</a>
+        <a href="https://ollama.com" target="_blank" rel="noopener" style="color:var(--text-secondary);text-decoration:none;transition:all .3s;font-size:13px;" onmouseover="this.style.color='var(--highlight-color)';this.style.textShadow='0 0 8px var(--glow-color)'" onmouseout="this.style.color='var(--text-secondary)';this.style.textShadow='none'"><svg class="icon icon-sm" style="margin-right:4px"><use href="#i-cube"/></svg> Ollama</a>
+        <a href="https://therealfred.ca" target="_blank" rel="noopener" style="color:var(--text-secondary);text-decoration:none;transition:all .3s;font-size:13px;" onmouseover="this.style.color='var(--highlight-color)';this.style.textShadow='0 0 8px var(--glow-color)'" onmouseout="this.style.color='var(--text-secondary)';this.style.textShadow='none'"><svg class="icon icon-sm" style="margin-right:4px"><use href="#i-globe"/></svg> TheRealFRED</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+// ===== MODEL DATABASE (sizes in MB, Q4_K_M default) =====
+var MODEL_DB=[
+  {name:"llama3.1:8b",size:4741,params:"8B",cat:"chat",desc:"Meta's latest. Excellent general-purpose LLM."},
+  {name:"llama3.1:70b",size:40172,params:"70B",cat:"chat",desc:"Full 70B. Needs A100 80GB or quantized."},
+  {name:"llama3.2:1b",size:1216,params:"1B",cat:"chat",desc:"Ultra-lightweight. Great for edge devices."},
+  {name:"llama3.2:3b",size:2019,params:"3B",cat:"chat",desc:"Small but capable. Fits anything."},
+  {name:"llama3.2:11b",size:6417,params:"11B",cat:"vision",desc:"Multimodal — handles images + text."},
+  {name:"mistral:7b",size:4111,params:"7B",cat:"chat",desc:"Fast, efficient, great quality-to-size ratio."},
+  {name:"mistral-nemo:12b",size:7246,params:"12B",cat:"chat",desc:"Mistral Nemo. 128k context window."},
+  {name:"mixtral:8x7b",size:26355,params:"47B",cat:"chat",desc:"Mixture of experts. A100 recommended."},
+  {name:"codestral:22b",size:12797,params:"22B",cat:"code",desc:"Mistral's code model. 256k context."},
+  {name:"qwen2.5:0.5b",size:398,params:"0.5B",cat:"chat",desc:"Tiny. Good for testing and benchmarks."},
+  {name:"qwen2.5:1.5b",size:944,params:"1.5B",cat:"chat",desc:"Very small. Surprisingly capable."},
+  {name:"qwen2.5:3b",size:1920,params:"3B",cat:"chat",desc:"Small but strong multilingual model."},
+  {name:"qwen2.5:7b",size:4413,params:"7B",cat:"chat",desc:"Excellent multilingual. Beats many 13B models."},
+  {name:"qwen2.5:14b",size:8728,params:"14B",cat:"chat",desc:"Fits T4. Very strong performance."},
+  {name:"qwen2.5:32b",size:19245,params:"32B",cat:"chat",desc:"Needs A100 40GB or heavy quantization."},
+  {name:"qwen2.5:72b",size:41575,params:"72B",cat:"chat",desc:"Full size. A100 80GB required."},
+  {name:"qwen2.5-coder:7b",size:4414,params:"7B",cat:"code",desc:"Code-specialized Qwen 2.5."},
+  {name:"qwen2.5-coder:32b",size:19264,params:"32B",cat:"code",desc:"Large code model. Needs A100."},
+  {name:"phi3:mini",size:2286,params:"3.8B",cat:"chat",desc:"Microsoft's small powerhouse. Fits anything."},
+  {name:"phi3:medium",size:7931,params:"14B",cat:"chat",desc:"Larger Phi 3. Fits T4 comfortably."},
+  {name:"phi3.5:mini",size:2263,params:"3.8B",cat:"chat",desc:"Phi 3.5 update. Improved reasoning."},
+  {name:"phi3.5:moe",size:10843,params:"42B",cat:"chat",desc:"Mixture of experts. A100 40GB."},
+  {name:"gemma2:2b",size:1606,params:"2B",cat:"chat",desc:"Google's small model. Fast inference."},
+  {name:"gemma2:9b",size:5441,params:"9B",cat:"chat",desc:"Great quality for its size. Fits T4."},
+  {name:"gemma2:27b",size:16080,params:"27B",cat:"chat",desc:"Needs A100 40GB or Q3 quantization."},
+  {name:"codellama:7b",size:3811,params:"7B",cat:"code",desc:"Meta's code LLaMA. Solid code generation."},
+  {name:"codellama:13b",size:7386,params:"13B",cat:"code",desc:"Larger Code LLaMA. Fits T4."},
+  {name:"deepseek-coder-v2:16b",size:9530,params:"16B",cat:"code",desc:"DeepSeek V2 Lite. Excellent coder."},
+  {name:"deepseek-coder-v2:236b",size:130000,params:"236B",cat:"code",desc:"Full DeepSeek V2. Multi-GPU only."},
+  {name:"starcoder2:3b",size:1746,params:"3B",cat:"code",desc:"BigCode's small code model."},
+  {name:"starcoder2:7b",size:3818,params:"7B",cat:"code",desc:"BigCode's 7B coder. Good balance."},
+  {name:"starcoder2:15b",size:8765,params:"15B",cat:"code",desc:"Larger StarCoder2. Fits T4."},
+  {name:"llava:7b",size:4543,params:"7B",cat:"vision",desc:"Visual instruction tuning on LLaMA."},
+  {name:"llava:13b",size:7818,params:"13B",cat:"vision",desc:"Larger LLaVA. Better image understanding."},
+  {name:"llava-llama3:8b",size:4796,params:"8B",cat:"vision",desc:"LLaVA on Llama 3 8B backbone."},
+  {name:"bakllava:7b",size:4549,params:"7B",cat:"vision",desc:"LLaVA on Mistral backbone."},
+  {name:"minicpm-v:8b",size:5120,params:"8B",cat:"vision",desc:"OpenBMB's multimodal model."},
+  {name:"moondream:1.8b",size:1470,params:"1.8B",cat:"vision",desc:"Tiny vision model. Fast image descriptions."},
+  {name:"nomic-embed-text",size:274,params:"137M",cat:"embedding",desc:"High-quality text embeddings. 8192 context."},
+  {name:"mxbai-embed-large",size:669,params:"335M",cat:"embedding",desc:"Mixedbread AI embeddings. 512 dim."},
+  {name:"all-minilm:22m",size:45,params:"22M",cat:"embedding",desc:"Ultra-tiny embeddings. Fast but basic."},
+  {name:"snowflake-arctic-embed:22m",size:47,params:"22M",cat:"embedding",desc:"Snowflake's tiny embedding model."},
+  {name:"tinyllama:1.1b",size:668,params:"1.1B",cat:"chat",desc:"Tiny but trained on 3T tokens."},
+  {name:"orca-mini:3b",size:1998,params:"3B",cat:"chat",desc:"Fine-tuned for instruction following."},
+  {name:"stablelm2:12b",size:6814,params:"12B",cat:"chat",desc:"Stability AI's language model."},
+  {name:"yi:1.5b",size:940,params:"1.5B",cat:"chat",desc:"01.AI's small model."},
+  {name:"yi:6b",size:3810,params:"6B",cat:"chat",desc:"01.AI's 6B model. Strong performer."},
+  {name:"yi:9b",size:5428,params:"9B",cat:"chat",desc:"01.AI's 9B. Excellent for Chinese + English."},
+  {name:"yi:34b",size:19246,params:"34B",cat:"chat",desc:"Needs A100 40GB."},
+  {name:"solar:10.7b",size:6113,params:"10.7B",cat:"chat",desc:"Upstage's Solar. Fits T4."},
+  {name:"command-r:35b",size:19146,params:"35B",cat:"chat",desc:"Cohere's Command R. A100 40GB."},
+  {name:"command-r-plus:104b",size:58378,params:"104B",cat:"chat",desc:"Full Command R+. A100 80GB."},
+  {name:"starling-lm:7b",size:4111,params:"7B",cat:"chat",desc:"UC Berkeley's RLHF-tuned Mistral."},
+  {name:"openhermes:2.5-mistral-7b",size:4111,params:"7B",cat:"chat",desc:"Popular fine-tune of Mistral 7B."},
+  {name:"dolphin-mixtral:8x7b",size:26355,params:"47B",cat:"chat",desc:"Uncensored Mixtral. A100 required."},
+  {name:"nous-hermes2-mixtral:8x7b",size:26355,params:"47B",cat:"chat",desc:"NousResearch Mixtral. A100 required."},
+  {name:"granite:7b",size:4100,params:"7B",cat:"code",desc:"IBM Granite code model."},
+  {name:"granite:34b",size:19200,params:"34B",cat:"code",desc:"IBM Granite large. A100 40GB."}
+];
+MODEL_DB.sort(function(a,b){return a.size-b.size;});
+
+// ===== STATE =====
+var selectedModel='llama3.1',isGenerating=false,isOnline=false,chatHistory=[],abortController=null,currentFilter='all',pulledModels=[],pullingModels={},effectiveVram=16384-2048;
+
+// ===== TERMINAL TYPING =====
+(function(){var el=document.getElementById('termTyping');if(!el)return;var t='{"response": "Hello! I\'m running on a free GPU..."}',i=0;function go(){if(i<t.length){el.textContent+=t[i];i++;setTimeout(go,40+Math.random()*60);}}setTimeout(go,1500);})();
+
+// ===== SCROLL REVEAL =====
+var revObs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible');});},{threshold:0.1});
+document.querySelectorAll('.fade-in').forEach(function(el){revObs.observe(el);});
+
+// ===== NAV =====
+window.addEventListener('scroll',function(){document.getElementById('mainNav').classList.toggle('scrolled',window.scrollY>40);});
+function toggleMobileMenu(){var m=document.getElementById('mobileMenu');m.style.display=m.style.display==='none'?'block':'none';}
+function closeMobileMenu(){document.getElementById('mobileMenu').style.display='none';}
+
+// ===== TOAST =====
+function showToast(msg,type){type=type||'info';var c=document.getElementById('toastContainer'),t=document.createElement('div');t.className='toast';var icons={info:'i-info',success:'i-check',error:'i-xmark'};var colors={info:'var(--highlight-color)',success:'var(--highlight-secondary)',error:'var(--danger-color)'};t.innerHTML='<svg class="icon" style="color:'+(colors[type]||colors.info)+';"><use href="#'+(icons[type]||icons.info)+'"/></svg> '+msg;c.appendChild(t);setTimeout(function(){t.remove();},3200);}
+
+// ===== COPY =====
+function copyText(text,btn){navigator.clipboard.writeText(text).then(function(){btn.classList.add('copied');btn.innerHTML='<svg class="icon icon-sm"><use href="#i-check"/></svg> copied';setTimeout(function(){btn.classList.remove('copied');btn.innerHTML='<svg class="icon icon-sm"><use href="#i-copy"/></svg> copy';},2000);}).catch(function(){showToast('failed to copy','error');});}
+
+// ===== STEPS =====
+function toggleStep(h){h.parentElement.classList.toggle('open');}
+
+// ===== TABS =====
+function switchTab(btn,tabId){document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');['tab-curl','tab-python','tab-js'].forEach(function(id){document.getElementById(id).style.display='none';});document.getElementById(tabId).style.display='block';var l={'tab-curl':'curl','tab-python':'python','tab-js':'javascript'};document.getElementById('tabLabel').textContent=l[tabId]||'';}
+function copyCurrentTab(btn){var v=document.querySelector('[id^="tab-"][style*="block"]');if(v)copyText(v.textContent,btn);}
+
+// ===== CHAT MODEL SELECTOR =====
+function selectModel(btn){document.querySelectorAll('.model-chip[data-model]').forEach(function(c){c.classList.remove('selected');});btn.classList.add('selected');selectedModel=btn.dataset.model;document.getElementById('chatModelName').textContent=selectedModel;showToast('switched to '+selectedModel,'info');}
+
+// ===== GPU / VRAM =====
+function onGpuChange(){var sel=document.getElementById('gpuSelect'),wrap=document.getElementById('customVramWrap');if(sel.value==='custom'){wrap.style.display='flex';effectiveVram=parseInt(document.getElementById('customVram').value||16384)-2048;}else{wrap.style.display='none';effectiveVram=parseInt(sel.value)-2048;}renderModels();}
+
+// ===== MODEL BROWSER =====
+function formatSize(mb){return mb<1024?mb+' MB':(mb/1024).toFixed(1)+' GB';}
+function setFilter(btn){document.querySelectorAll('.filter-chip').forEach(function(c){c.classList.remove('active');});btn.classList.add('active');currentFilter=btn.dataset.filter;renderModels();}
+
+function getFilteredModels(){
+  var search=(document.getElementById('modelSearch').value||'').toLowerCase();
+  return MODEL_DB.filter(function(m){
+    if(search&&m.name.toLowerCase().indexOf(search)===-1&&m.cat.toLowerCase().indexOf(search)===-1&&m.desc.toLowerCase().indexOf(search)===-1)return false;
+    if(currentFilter==='all')return true;
+    if(currentFilter==='fits')return m.size<=effectiveVram;
+    if(currentFilter==='pulled')return pulledModels.indexOf(m.name)!==-1;
+    return m.cat===currentFilter;
+  });
+}
+
+function h2r(hex){
+  if(hex.indexOf('var(')===0){var m={'var(--highlight-color)':'0,212,170','var(--highlight-secondary)':'0,255,204','#88ccff':'136,204,255','#cc99ff':'204,153,255','#fbbf24':'251,191,36','var(--text-secondary)':'160,160,160'};return m[hex]||'255,255,255';}
+  var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return r+','+g+','+b;
+}
+
+function renderModels(){
+  var grid=document.getElementById('modelGrid'),noMsg=document.getElementById('noModelsMsg'),statsEl=document.getElementById('modelStats'),models=getFilteredModels();
+  var tF=0,tB=0,tP=0;MODEL_DB.forEach(function(m){if(m.size<=effectiveVram)tF++;else tB++;if(pulledModels.indexOf(m.name)!==-1)tP++;});
+  statsEl.innerHTML='<div class="stat-pill" style="color:var(--highlight-color);"><svg class="icon icon-sm"><use href="#i-check"/></svg> '+tF+' fit your GPU</div><div class="stat-pill" style="color:var(--danger-color);"><svg class="icon icon-sm"><use href="#i-xmark"/></svg> '+tB+' too large</div><div class="stat-pill" style="color:var(--highlight-secondary);"><svg class="icon icon-sm"><use href="#i-download"/></svg> '+tP+' pulled</div><div class="stat-pill" style="color:var(--text-secondary);"><svg class="icon icon-sm"><use href="#i-memory"/></svg> '+formatSize(effectiveVram+2048)+' total / '+formatSize(effectiveVram)+' usable</div>';
+  if(!models.length){grid.innerHTML='';noMsg.style.display='block';return;}
+  noMsg.style.display='none';
+  var html='',catColors={chat:'var(--highlight-color)',code:'#88ccff',vision:'#cc99ff',embedding:'#fbbf24'};
+  models.forEach(function(m){
+    var fits=m.size<=effectiveVram,pulled=pulledModels.indexOf(m.name)!==-1,pulling=pullingModels[m.name],pct=Math.min(100,Math.round((m.size/effectiveVram)*100)),barClass=pct>90?'danger':pct>70?'warning':'';
+    var cc='model-card';if(pulled)cc+=' is-pulled';if(!fits)cc+=' too-large';if(pulling)cc+=' pulling';
+    var statusBadge='',actionBtn='',cid=m.name.replace(/[^a-z0-9]/gi,'_');
+    if(pulling){var pP=pulling.progress>0?Math.round(pulling.progress):0;statusBadge='<span id="st_'+cid+'" style="color:var(--warning-color);font-size:10px;"><svg class="icon icon-sm fa-spin"><use href="#i-spinner"/></svg> '+pulling.status+(pP>0?' '+pP+'%':'')+'</span>';actionBtn='<button class="btn btn-sm" disabled><svg class="icon icon-sm fa-spin"><use href="#i-spinner"/></svg> pulling</button>';}    else if(pulled){
+      statusBadge='<span style="color:var(--highlight-secondary);font-size:10px;"><svg class="icon icon-sm"><use href="#i-check"/></svg> pulled</span>';
+      actionBtn='<button class="btn btn-sm" style="border-color:var(--highlight-color);color:var(--highlight-color);" onclick="removeModel(\''+m.name+'\')"><svg class="icon icon-sm"><use href="#i-trash"/></svg> remove</button>';
+    }
+    else if(fits){
+      statusBadge='<span style="color:var(--text-secondary);font-size:10px;"><svg class="icon icon-sm"><use href="#i-memory"/></svg> '+formatSize(m.size)+'</span>';
+      actionBtn='<button class="btn btn-sm" onclick="pullModel(\''+m.name+'\')"><svg class="icon icon-sm"><use href="#i-download"/></svg> pull</button>';
+    }
+    else {
+      statusBadge='<span style="color:var(--danger-color);font-size:10px;"><svg class="icon icon-sm"><use href="#i-exclamation"/></svg> needs '+formatSize(m.size)+'</span>';
+      actionBtn='<button class="btn btn-sm" disabled><svg class="icon icon-sm"><use href="#i-xmark"/></svg> no fit</button>';
+    }
+    var rgb=h2r(catColors[m.cat]||'var(--text-secondary)');
+    var capFill=barClass==='danger'?'var(--danger-color)':(barClass==='warning'?'var(--warning-color)':'rgba('+rgb+',.4)');
+    var pullBar=pulling?'<div class="model-pull-progress" id="pb_'+cid+'" style="width:'+(pulling.progress||0)+'%"></div>':'';
+    html+='<div class="'+cc+'">'
+      +'<div class="flex justify-between items-center" style="margin-bottom:.5rem;"><span style="font-weight:600;font-size:13px;">'+m.name+'</span>'+statusBadge+'</div>'
+      +'<div style="font-size:11px;color:var(--text-secondary);margin-bottom:.7rem;min-height:34px;">'+m.desc+'</div>'
+      +'<div class="flex justify-between" style="font-size:10px;color:var(--text-secondary);margin-bottom:4px;"><span>'+m.params+' params</span><span>'+formatSize(m.size)+' / '+pct+'% of VRAM</span></div>'
+      +'<div style="height:4px;background:var(--accent-color);border-radius:2px;overflow:hidden;margin-bottom:.9rem;"><div style="height:100%;width:'+pct+'%;background:'+capFill+';transition:width .3s;"></div></div>'
+      +'<div class="flex justify-between items-center">'+actionBtn+'<span style="font-size:10px;color:'+catColors[m.cat]+';">'+m.cat+'</span></div>'
+      +pullBar
+      +'</div>';
+  });
+  grid.innerHTML=html;
+}
+
+// ===== MODEL PULL (simulated download progress) =====
+function pullModel(name){
+  if(pullingModels[name]||pulledModels.indexOf(name)!==-1)return;
+  var m=null;
+  for(var i=0;i<MODEL_DB.length;i++){if(MODEL_DB[i].name===name)m=MODEL_DB[i];}
+  if(!m)return;
+  if(m.size>effectiveVram){showToast(name+' needs '+formatSize(m.size)+' — too large for this VRAM','error');return;}
+  pullingModels[name]={progress:0,status:'queued'};
+  renderModels();
+  var total=Math.min(5200,900+m.size/12),step=90,elapsed=0;
+  var timer=setInterval(function(){
+    elapsed+=step;
+    var p=Math.min(100,Math.round((elapsed/total)*100));
+    var st=p<8?'pulling manifest':(p<88?'downloading':'verifying');
+    pullingModels[name]={progress:p,status:st};
+    var cid=name.replace(/[^a-z0-9]/gi,'_');
+    var bar=document.getElementById('pb_'+cid);
+    if(bar)bar.style.width=p+'%';
+    var badge=document.getElementById('st_'+cid);
+    if(badge)badge.innerHTML='<svg class="icon icon-sm fa-spin"><use href="#i-spinner"/></svg> '+st+(p>0?' '+p+'%':'');
+    if(p>=100){
+      clearInterval(timer);
+      delete pullingModels[name];
+      pulledModels.push(name);
+      showToast('pulled '+name+' ('+formatSize(m.size)+')','success');
+      renderModels();
+    }
+  },step);
+}
+
+function removeModel(name){
+  var i=pulledModels.indexOf(name);
+  if(i===-1)return;
+  pulledModels.splice(i,1);
+  showToast('removed '+name,'info');
+  renderModels();
+}
+
+// ===== CHAT (simulated — no live endpoint is contacted) =====
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,120)+'px';
+}
+
+function handleChatKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
+}
+
+function appendMsg(role,text){
+  var box=document.getElementById('chatMessages');
+  var d=document.createElement('div');
+  d.className='msg msg-'+role;
+  d.textContent=text;
+  box.appendChild(d);
+  box.scrollTop=box.scrollHeight;
+  return d;
+}
+
+function mockReply(text){
+  var t=text.toLowerCase(),m=document.getElementById('chatModelName').textContent;
+  if(t.indexOf('hello')!==-1||t.indexOf('hi')!==-1)return "Hello! I'm "+m+', running on a free Colab GPU behind a Cloudflare tunnel. Ask me anything.';
+  if(t.indexOf('gpu')!==-1||t.indexOf('vram')!==-1)return 'I have '+formatSize(effectiveVram)+' of VRAM usable (a 2 GB share is reserved for the context window). Anything larger has to be quantized.';
+  if(t.indexOf('tunnel')!==-1||t.indexOf('url')!==-1)return 'Traffic reaches me through a Cloudflare quick tunnel: cloudflared proxies the HTTPS request down to localhost:11434, where Ollama is serving.';
+  if(t.indexOf('pull')!==-1||t.indexOf('model')!==-1)return 'Pick a tag in the model browser above and hit pull — it only shows tags that fit the detected GPU.';
+  return "Demo reply from "+m+' on a free GPU. The real notebook streams this from /api/chat through your tunnel.';
+}
+
+function sendMessage(){
+  if(isGenerating)return;
+  var input=document.getElementById('chatInput');
+  var text=(input.value||'').trim();
+  if(!text)return;
+  if(!isOnline){showToast('endpoint is offline — check the tunnel URL first','error');return;}
+  appendMsg('user',text);
+  chatHistory.push({role:'user',content:text});
+  input.value='';
+  autoResize(input);
+  isGenerating=true;
+  var btn=document.getElementById('sendBtn');
+  btn.disabled=true;
+  var bubble=appendMsg('assistant','…');
+  var reply=mockReply(text),i=0;
+  (function type(){
+    if(i<reply.length){
+      i++;
+      bubble.textContent=reply.slice(0,i);
+      var box=document.getElementById('chatMessages');
+      box.scrollTop=box.scrollHeight;
+      setTimeout(type,18);
+    }else{
+      isGenerating=false;
+      btn.disabled=false;
+      chatHistory.push({role:'assistant',content:reply});
+    }
+  })();
+}
+
+function clearChat(){
+  chatHistory=[];
+  document.getElementById('chatMessages').innerHTML='<div class="msg msg-system">chat cleared · connected via cloudflare tunnel</div>';
+  showToast('chat cleared','info');
+}
+
+// ===== ENDPOINT CHECK (simulated reachability) =====
+function setEndpointStatus(cls,text){
+  var dots=['heroStatus','navStatus','chatStatus'];
+  var labels=['heroStatusText','navStatusText','chatStatusText'];
+  for(var i=0;i<dots.length;i++){
+    var d=document.getElementById(dots[i]);
+    if(d)d.className='status-dot '+cls;
+    var l=document.getElementById(labels[i]);
+    if(l)l.textContent=text;
+  }
+}
+
+function checkEndpoint(){
+  var url=(document.getElementById('endpointInput').value||'').trim();
+  if(!url){showToast('paste a tunnel URL first','error');return;}
+  setEndpointStatus('checking','checking…');
+  setTimeout(function(){
+    if(/^https?:\/\/[^\s]+$/.test(url)){
+      isOnline=true;
+      var short=url.replace(/^https?:\/\//,'').replace(/\/$/,'');
+      setEndpointStatus('online','online · '+short);
+      showToast('endpoint reachable','success');
+    }else{
+      isOnline=false;
+      setEndpointStatus('offline','unreachable');
+      showToast('could not reach that URL','error');
+    }
+  },700);
+}
+
+// ===== INIT =====
+renderModels();
+autoResize(document.getElementById('chatInput'));
+var _endpointField=document.getElementById('endpointInput');
+if(_endpointField)_endpointField.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();checkEndpoint();}});
+// The page ships with a sample tunnel URL, so resolve the status dots on load.
+checkEndpoint();
+</script>
+</body>
+</html>

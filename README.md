@@ -2,6 +2,8 @@
 
 Run Ollama on a free Google Colab GPU and expose a public HTTPS endpoint (Cloudflare Tunnel or ngrok) so you can use the model from anywhere — VS Code, curl, Python scripts, or Claude Code-style clients.
 
+![Ollama-Colab](social.jpg)
+
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TheRealFREDP3D/Ollama-Colab/blob/main/Ollama_Colab_v2.6.ipynb)
 
 > Self-teaching project exploring LLM inference, reliable tunneling, GPU-aware model selection, and remote API access.
