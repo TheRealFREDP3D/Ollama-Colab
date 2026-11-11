@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Hardware-aware model recommendations in the Model Browser (Step 2): a "⭐ Recommended for &lt;GPU&gt;" panel ranks the library for the detected GPU, listing the best-fitting candidates with a one-line reason (tag, estimated size, share of VRAM, headroom, pull count) and a one-click "use this model" action that also syncs the search box, tag radios and info panel
+- The model list and the recommendation panel now share one filter (`visible_models()`), so they can no longer disagree about what is on screen
+
+### Changed
+- `refresh_list()` delegates its filtering to the shared `visible_models()` helper instead of repeating the same predicate
+
 ## [2.6.1] - 2026-08-08
 
 ### Added

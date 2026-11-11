@@ -6,14 +6,15 @@ Source of truth: `Ollama_Colab_v2.6.ipynb`.
 1. **Dependency & environment check (Step 1)** — detects Python, GPU, installs missing Python packages (`requests`, `beautifulsoup4`, `ipywidgets`, `tqdm`, `psutil`, `pyngrok`), and initialises shared globals: the background-process registry (`_bg_processes`), `GPU_INFO`, and `estimate_model_size_gb()`.
 2. **Interactive model browser (Step 2)** — browses the Ollama library, with a curated static fallback when `ollama.com` is unreachable.
 3. **GPU-fit filtering** — by default only shows model *tags* whose estimated VRAM footprint fits the detected GPU (T4/L4/A100/A100-80GB), sorted smallest-first. Toggle off to see the full library.
-4. **Environment & memory policy (Step 3)** — choose a tunnel backend, set `OLLAMA_KEEP_ALIVE` memory policy (keep-loaded / auto-unload / 5 min / 30 min) which persists into `os.environ` on every change, and loads Colab secrets.
-5. **GPU monitoring (Step 4)** — one-shot `nvidia-smi` snapshot; optional `monitor_gpu()` live monitor.
-6. **Ollama install (Step 5)** — `curl -fsSL https://ollama.com/install.sh | sh` (plus `zstd` prereq), safe to re-run.
-7. **Server start (Step 6)** — launches `ollama serve` in the background and waits for `localhost:11434` to respond; registered in `_bg_processes` for clean shutdown.
-8. **Model pull (Step 7)** — streamed progress; auto-restarts `ollama serve` and retries if the server dies, re-registering the restarted process so it is cleaned up later.
-9. **Public tunnel (Step 8)** — **Cloudflare quick tunnel** (no credentials), **named tunnel** (via `cloudflare_token` secret), or **ngrok** (`ngrok_authtoken` secret). Polls the *public* URL on `/api/tags` until it actually responds — covers Cloudflare's "URL printed but not yet routable" delay.
-10. **Endpoint test (Step 9)** — sends a configurable test prompt through the live tunnel with backoff retries.
-11. **Keep-alive (Step 10)** — blocking loop; stopping the cell terminates Ollama + tunnel cleanly via the shared process registry.
+4. **Hardware-aware recommendations** — the same data drives a "⭐ Recommended for your GPU" panel that ranks the visible library, picks the *largest* tag that still fits (most capable model the GPU can hold), explains each pick, and applies it in one click. Ranked by VRAM headroom (sweet spot ≈ 75% of VRAM), capability match and pull count. Not yet scored: quantization and context length — the `ollama.com` scrape does not expose them, so they are left out rather than guessed.
+5. **Environment & memory policy (Step 3)** — choose a tunnel backend, set `OLLAMA_KEEP_ALIVE` memory policy (keep-loaded / auto-unload / 5 min / 30 min) which persists into `os.environ` on every change, and loads Colab secrets.
+6. **GPU monitoring (Step 4)** — one-shot `nvidia-smi` snapshot; optional `monitor_gpu()` live monitor.
+7. **Ollama install (Step 5)** — `curl -fsSL https://ollama.com/install.sh | sh` (plus `zstd` prereq), safe to re-run.
+8. **Server start (Step 6)** — launches `ollama serve` in the background and waits for `localhost:11434` to respond; registered in `_bg_processes` for clean shutdown.
+9. **Model pull (Step 7)** — streamed progress; auto-restarts `ollama serve` and retries if the server dies, re-registering the restarted process so it is cleaned up later.
+10. **Public tunnel (Step 8)** — **Cloudflare quick tunnel** (no credentials), **named tunnel** (via `cloudflare_token` secret), or **ngrok** (`ngrok_authtoken` secret). Polls the *public* URL on `/api/tags` until it actually responds — covers Cloudflare's "URL printed but not yet routable" delay.
+11. **Endpoint test (Step 9)** — sends a configurable test prompt through the live tunnel with backoff retries.
+12. **Keep-alive (Step 10)** — blocking loop; stopping the cell terminates Ollama + tunnel cleanly via the shared process registry.
 
 ## Tunnel backends
 | Backend | Credentials | URL stability |
